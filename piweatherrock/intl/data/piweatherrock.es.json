@@ -2,9 +2,9 @@
 	"es": {
 		"feels_like": "Sensación térmica:",
 		"wind":"Viento:",
-		"humidity":"Humedad:",
-		"umbrella":"¡Coge el paraguas!",
-		"no_umbrella":"Hoy no cojas el paraguas",
+		"humidity":"Humedad absoluta:",
+		"umbrella":"¡Rayos y centellas!",
+		"no_umbrella":"Hoy no cojas el paraguas, coge la sombrilla",
 		"today":"hoy",
 		"powered_by":"Weather rock gracias a Dark Sky",
 		"tonight":"esta noche",
