@@ -20,22 +20,32 @@ More information about the project and full documentation can be found at https:
 
 ## Local Development process
 
-- python3 -m venv env_name
-- source env_name/bin/activate
-  
-- git clone https://github.com/carloshm/PiWeatherRock.git
-- cd PiWeatherRock  
-- git pull (for any additional external change after a while)
-- Make changes
-- git add .
-- git commit -m "changes description"
-- git push origin main
+```python
+python3 -m venv env_name
+source env_name/bin/activate
+```
+
+```python
+git clone https://github.com/carloshm/PiWeatherRock.git
+cd PiWeatherRock  
+git pull (for any additional external change after a while)
+```
+
+Make changes
+
+```python
+git add .
+git commit -m "changes description"
+git push origin main
+```
 
 ## Run changes https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html
 
-- python3 -m pip install --upgrade setuptools wheel
-- python3 -m pip install .
-- python3 ./scripts/pwr-ui -c ./piweatherrock/piweatherrock-config.json
+```python
+python3 -m pip install --upgrade setuptools wheel
+python3 -m pip install .
+python3 ./scripts/pwr-ui -c ./piweatherrock/piweatherrock-config.json
+```
 
 ## Validate Service Data
 
