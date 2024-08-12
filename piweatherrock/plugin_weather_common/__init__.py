@@ -462,28 +462,40 @@ class PluginWeatherCommon:
         Based on that, this method will map the Dark Sky icon name to the name
         of an icon in this project.
         """
-        if icon == 'clear-day' or icon == 'clear':
+        if icon == 'clear':
             icon_path = 'icons/{}/clear.png'.format(size)
-        elif icon == 'clear-night':
-            icon_path = 'icons/{}/nt_clear.png'.format(size)
+        elif icon == 'mostlysunny':
+            icon_path = 'icons/{}/mostlysunny.png'.format(size)
+        elif icon == 'partlycloudy':
+            icon_path = 'icons/{}/partlycloudy.png'.format(size)
+        elif icon == 'cloudy':
+            icon_path = 'icons/{}/cloudy.png'.format(size)
+        elif icon == 'fog':
+            icon_path = 'icons/{}/fog.png'.format(size)
+        elif icon == 'hazy':
+            icon_path = 'icons/{}/hazy.png'.format(size)
         elif icon == 'rain':
             icon_path = 'icons/{}/rain.png'.format(size)
         elif icon == 'chancerain':
             icon_path = 'icons/{}/chancerain.png'.format(size)
+        elif icon == 'chainsleet':
+            icon_path = 'icons/{}/chainsleet.png'.format(size)
         elif icon == 'snow':
             icon_path = 'icons/{}/snow.png'.format(size)
         elif icon == 'sleet':
             icon_path = 'icons/{}/sleet.png'.format(size)
         elif icon == 'wind':
             icon_path = 'icons/alt_icons/{}/wind.png'.format(size)
-        elif icon == 'fog':
-            icon_path = 'icons/{}/fog.png'.format(size)
-        elif icon == 'cloudy':
-            icon_path = 'icons/{}/cloudy.png'.format(size)
-        elif icon == 'partly-cloudy-day' or icon == 'partlycloudy':
-            icon_path = 'icons/{}/partlycloudy.png'.format(size)
-        elif icon == 'partly-cloudy-night' or icon == 'nt_partlycloudy':
-            icon_path = 'icons/{}/nt_partlycloudy.png'.format(size)
+        elif icon == 'chancesnow':
+            icon_path = 'icons/alt_icons/{}/chancesnow.png'.format(size)
+        elif icon == 'tstorms' or icon == 'tstorm':
+            icon_path = 'icons/alt_icons/{}/tstorm.png'.format(size)
+        elif icon == 'chanceflurries':
+            icon_path = 'icons/alt_icons/{}/chanceflurries.png'.format(size)
+        elif icon == 'flurries':
+            icon_path = 'icons/alt_icons/{}/flurries.png'.format(size)
+        elif icon == 'chancetstorms':
+            icon_path = 'icons/alt_icons/{}/chancetstorms.png'.format(size)
         else:
             icon_path = 'icons/{}/unknown.png'.format(size)
 
