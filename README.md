@@ -31,7 +31,7 @@ More information about the project and full documentation can be found at https:
 ## Run changes https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html
 
 - pip install -r requirements.txt
-- python3 ./scripts/pwr-ui -c /home/pi/Desktop/piweatherrock-config.json
+- python3 ./scripts/pwr-ui -c ./piweatherrock/piweatherrock-config.json
 
 ## Validate Service Data
 
