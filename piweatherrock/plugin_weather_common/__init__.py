@@ -462,7 +462,7 @@ class PluginWeatherCommon:
         Based on that, this method will map the Dark Sky icon name to the name
         of an icon in this project.
         """
-        if icon == 'clear-day':
+        if icon == 'clear-day' or icon == 'clear':
             icon_path = 'icons/{}/clear.png'.format(size)
         elif icon == 'clear-night':
             icon_path = 'icons/{}/nt_clear.png'.format(size)
