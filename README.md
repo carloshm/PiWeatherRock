@@ -20,8 +20,11 @@ More information about the project and full documentation can be found at https:
 
 ## Local Development process
 
+- python3 -m venv env_name
+- source env_name/bin/activate
+  
 - git clone https://github.com/carloshm/PiWeatherRock.git
-- cd PiWeatherRock
+- cd PiWeatherRock  
 - git pull (for any additional external change after a while)
 - Make changes
 - git add .
