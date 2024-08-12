@@ -1,0 +1,26 @@
+{
+  "ds_api_key": "openmeteo-request-piweatherrock",
+  "lat": 40.299457,
+  "lon": -3.743399,
+  "units": "si",
+  "lang": "es",
+  "ui_lang":"es",
+  "timezone":"Europe/Madrid",
+  "fullscreen": true,
+  "12hour_disp": false,
+  "icon_offset": -23.5,
+  "update_freq": 900,
+  "info_pause": 60,
+  "info_delay": 900,
+  "plugins": {
+    "daily": {
+      "pause": 60,
+      "enabled": false
+    },
+    "hourly": {
+      "pause": 60,
+      "enabled": false
+    }
+  },
+  "log_level": "INFO"
+}
