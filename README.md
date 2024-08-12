@@ -21,8 +21,8 @@ More information about the project and full documentation can be found at https:
 ## Local Development process
 
 - git clone https://github.com/carloshm/PiWeatherRock.git
-- git pull (for any additional external change after a while)
 - cd PiWeatherRock
+- git pull (for any additional external change after a while)
 - Make changes
 - git add .
 - git commit -m "changes description"
