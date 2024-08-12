@@ -28,9 +28,9 @@ More information about the project and full documentation can be found at https:
 - git commit -m "changes description"
 - git push origin main
 
-## Run changes
+## Run changes https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html
 
-- python3 setup.py install --user
+- pip install -r requirements.txt
 - python3 ./scripts/pwr-ui -c /home/pi/Desktop/piweatherrock-config.json
 
 ## Validate Service Data
