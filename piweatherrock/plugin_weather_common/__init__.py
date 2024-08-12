@@ -468,6 +468,8 @@ class PluginWeatherCommon:
             icon_path = 'icons/{}/nt_clear.png'.format(size)
         elif icon == 'rain':
             icon_path = 'icons/{}/rain.png'.format(size)
+        elif icon == 'chancerain':
+            icon_path = 'icons/{}/chancerain.png'.format(size)
         elif icon == 'snow':
             icon_path = 'icons/{}/snow.png'.format(size)
         elif icon == 'sleet':
@@ -478,9 +480,9 @@ class PluginWeatherCommon:
             icon_path = 'icons/{}/fog.png'.format(size)
         elif icon == 'cloudy':
             icon_path = 'icons/{}/cloudy.png'.format(size)
-        elif icon == 'partly-cloudy-day':
+        elif icon == 'partly-cloudy-day' or icon == 'partlycloudy':
             icon_path = 'icons/{}/partlycloudy.png'.format(size)
-        elif icon == 'partly-cloudy-night':
+        elif icon == 'partly-cloudy-night' or icon == 'nt_partlycloudy':
             icon_path = 'icons/{}/nt_partlycloudy.png'.format(size)
         else:
             icon_path = 'icons/{}/unknown.png'.format(size)
