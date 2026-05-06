@@ -68,10 +68,10 @@ class Runner:
         # Switch to info periodically to prevent screen burn.
         self.periodic_info_activation = 0
 
-        # Loads data from darksky.net
+        # Loads data from Open-Meteo API
         if not self.my_weather_rock.get_forecast():
             self.my_weather_rock.log.exception(
-                "Error: no data from darksky.net.")
+                "Error: no data from Open-Meteo API.")
             self.running = False
 
         ##################################################################

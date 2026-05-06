@@ -44,7 +44,7 @@ class DataBlock(DataPoint):
         return self.data.__iter__()
 
     def __getitem__(self, index):
-        # keys in darksky API datablocks are always str
+        # keys in weather API datablocks are always str
         if isinstance(index, str):
             return self._data[index]
         return self.data.__getitem__(index)
