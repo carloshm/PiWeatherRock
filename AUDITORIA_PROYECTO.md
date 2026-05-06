@@ -34,9 +34,9 @@ El método devuelve rutas que después se cargan directamente con:
 
 Problemas detectados:
 
-- `chainsleet` parece un typo de `chancesleet`.
-  - Open-Meteo mapea códigos 56 y 66 a `chainsleet`.
-  - `icon_mapping()` busca `icons/{size}/chainsleet.png`.
+- La cadena literal `chainsleet` usada en el código parece un typo de `chancesleet`.
+  - Open-Meteo mapea códigos 56 y 66 a la cadena literal `chainsleet`.
+  - `icon_mapping()` busca el fichero literal `icons/{size}/chainsleet.png`.
   - En el repositorio existen `chancesleet.png`, no `chainsleet.png`.
 - Algunos iconos se buscan en `icons/alt_icons/{size}/`, pero no existen allí:
   - `chancesnow`
@@ -406,4 +406,3 @@ Campos mínimos que debería exponer:
   - pantalla HDMI conectada tarde;
   - ejecución como servicio `systemd`;
   - directorio de fotos vacío, inexistente y con imágenes corruptas.
-
