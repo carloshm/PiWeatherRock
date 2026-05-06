@@ -34,7 +34,7 @@ El método devuelve rutas que después se cargan directamente con:
 
 Problemas detectados:
 
-- La cadena literal `chainsleet` usada en el código parece un typo de `chancesleet`.
+- La cadena literal `chainsleet` usada en el código no coincide con los ficheros `chancesleet.png` incluidos en el repositorio.
   - Open-Meteo mapea códigos 56 y 66 a la cadena literal `chainsleet`.
   - `icon_mapping()` busca el fichero literal `icons/{size}/chainsleet.png`.
   - En el repositorio existen `chancesleet.png`, no `chainsleet.png`.
@@ -155,7 +155,7 @@ Pero la UI usa `config["units"]` para etiquetar grados y viento como si fueran `
 
 `DataPoint.__setattr__()` usa `eval(name.capitalize())` para `alerts` y `flags`; puede reemplazarse por un diccionario explícito.
 
-**Impacto:** superficie de riesgo innecesaria y errores más difíciles de diagnosticar.
+**Impacto:** superficie de riesgo innecesaria y errores más difíciles de diagnosticar. En el caso de `log_level`, si en el futuro la configuración pasa a ser editable desde una interfaz web o cualquier entrada controlable por usuario, el `eval()` sobre ese valor podría convertirse en una vulnerabilidad crítica de inyección de código.
 
 **Recomendación:** eliminar `eval()` en ambos puntos.
 
