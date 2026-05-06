@@ -1,5 +1,13 @@
 # Change log
 
+## [3.0.0](https://github.com/carloshm/PiWeatherRock)
+
+- Migrated weather API from Dark Sky to [Open-Meteo](https://open-meteo.com/)
+- Added `openmeteo.py` module to translate Open-Meteo responses to the internal Dark Sky data format
+- No API key is required for non-commercial use with Open-Meteo
+- Added internationalization support with `intl` module
+- Updated configuration to use Open-Meteo endpoint
+
 ## [2.1.0](https://github.com/genebean/PiWeatherRock/tree/2.1.0)
 
 - Add option for 24h time

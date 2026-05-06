@@ -35,7 +35,7 @@ signal.signal(signal.SIGTERM, exit_gracefully)
 
 class Weather:
     """
-    Fetches weather reports from Dark Sky for displaying on a screen.
+    Fetches weather reports from Open-Meteo API for displaying on a screen.
     """
 
     def __init__(self, config_file):

@@ -328,9 +328,9 @@ class PluginWeatherCommon:
 
     def units_decoder(self, units):
         """
-        https://darksky.net/dev/docs has lists out what each
-        unit is. The method below is just a codified version
-        of what is on that page.
+        Decodes the unit system for weather data.
+        Originally based on Dark Sky API unit definitions,
+        now used with Open-Meteo API data (translated via openmeteo.py).
         """
         si_dict = {
             'nearestStormDistance': 'Kilometers',
@@ -449,15 +449,11 @@ class PluginWeatherCommon:
 
     def icon_mapping(self, icon, size):
         """
-        https://darksky.net/dev/docs has this to say about icons:
-        icon optional
-        A machine-readable text summary of this data point, suitable for
-        selecting an icon for display. If defined, this property will have one
-        of the following values: clear-day, clear-night, rain, snow, sleet,
+        Maps weather icon codes to image files for display.
+        Icon values follow the Dark Sky convention (used internally for
+        backward compatibility): clear-day, clear-night, rain, snow, sleet,
         wind, fog, cloudy, partly-cloudy-day, or partly-cloudy-night.
-        (Developers should ensure that a sensible default is defined, as
-        additional values, such as hail, thunderstorm, or tornado, may be
-        defined in the future.)
+        The Open-Meteo WMO codes are translated to these values in openmeteo.py.
 
         Based on that, this method will map the Dark Sky icon name to the name
         of an icon in this project.
