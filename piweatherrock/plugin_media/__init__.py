@@ -3,6 +3,7 @@
 
 import os
 import random
+import select
 import subprocess
 import time
 import math
@@ -34,6 +35,7 @@ class PluginMedia:
         self.current_surface = None
         self.video_process = None
         self.video_failed_path = None
+        self.video_buffer = b""
         self.last_scan = 0
         self.signature = None
         self.get_rock_values(weather_rock)
@@ -83,8 +85,10 @@ class PluginMedia:
                 self.video_failed_path = path
                 self._render_message("Video playback requires ffmpeg")
                 return
-            frame = self.video_process.stdout.read(self.xmax * self.ymax * 3)
-            if len(frame) != self.xmax * self.ymax * 3:
+            frame = self._read_video_frame(path)
+            if frame is None:
+                return
+            if not frame:
                 self.log.info("Finished media video %s", path)
                 self._next_item()
                 return
@@ -159,6 +163,7 @@ class PluginMedia:
         self._stop_video()
         self.current_surface = None
         self.video_failed_path = None
+        self.video_buffer = b""
         if not self.items:
             self.current_index = -1
             self.current_item = None
@@ -183,9 +188,10 @@ class PluginMedia:
         if fit == "stretch":
             return pygame.transform.smoothscale(surface, (self.xmax, self.ymax))
 
-        scale = max(self.xmax / width, self.ymax / height)
         if fit == "contain":
             scale = min(self.xmax / width, self.ymax / height)
+        else:
+            scale = max(self.xmax / width, self.ymax / height)
         if fit == "cover":
             new_size = (
                 max(self.xmax, int(math.ceil(width * scale))),
@@ -263,6 +269,34 @@ class PluginMedia:
 
     def _is_video_playing(self):
         return self.video_process is not None
+
+    def _read_video_frame(self, path):
+        frame_size = self.xmax * self.ymax * 3
+        process = self.video_process
+        if process.poll() is not None:
+            if not self.video_buffer:
+                return b""
+
+        ready, _, _ = select.select([process.stdout], [], [], 0.2)
+        if not ready:
+            if process.poll() is not None:
+                return b""
+            return None
+
+        try:
+            chunk = os.read(process.stdout.fileno(),
+                            frame_size - len(self.video_buffer))
+        except OSError:
+            self.log.exception("Could not read media video %s", path)
+            return b""
+        if not chunk:
+            return b""
+        self.video_buffer += chunk
+        if len(self.video_buffer) < frame_size:
+            return None
+        frame = self.video_buffer[:frame_size]
+        self.video_buffer = self.video_buffer[frame_size:]
+        return frame
 
     def _render_message(self, message):
         self.screen.fill((0, 0, 0))
