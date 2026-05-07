@@ -3,6 +3,7 @@
 # Copyright (c) 2017 Gene Liverman <gene@technicalissues.us>
 # Distributed under the MIT License (https://opensource.org/licenses/MIT)
 
+import logging
 import pygame
 import time
 
@@ -456,43 +457,38 @@ class PluginWeatherCommon:
         The Open-Meteo WMO codes are translated to these values in openmeteo.py.
 
         Based on that, this method will map the Dark Sky icon name to the name
-        of an icon in this project.
+        of an icon in this project. If the resolved file does not exist, falls
+        back to unknown.png to prevent crashes.
         """
-        if icon == 'clear':
-            icon_path = 'icons/{}/clear.png'.format(size)
-        elif icon == 'mostlysunny':
-            icon_path = 'icons/{}/mostlysunny.png'.format(size)
-        elif icon == 'partlycloudy':
-            icon_path = 'icons/{}/partlycloudy.png'.format(size)
-        elif icon == 'cloudy':
-            icon_path = 'icons/{}/cloudy.png'.format(size)
-        elif icon == 'fog':
-            icon_path = 'icons/{}/fog.png'.format(size)
-        elif icon == 'hazy':
-            icon_path = 'icons/{}/hazy.png'.format(size)
-        elif icon == 'rain':
-            icon_path = 'icons/{}/rain.png'.format(size)
-        elif icon == 'chancerain':
-            icon_path = 'icons/{}/chancerain.png'.format(size)
-        elif icon == 'chainsleet':
-            icon_path = 'icons/{}/chainsleet.png'.format(size)
-        elif icon == 'snow':
-            icon_path = 'icons/{}/snow.png'.format(size)
-        elif icon == 'sleet':
-            icon_path = 'icons/{}/sleet.png'.format(size)
-        elif icon == 'wind':
-            icon_path = 'icons/alt_icons/{}/wind.png'.format(size)
-        elif icon == 'chancesnow':
-            icon_path = 'icons/alt_icons/{}/chancesnow.png'.format(size)
-        elif icon == 'tstorms' or icon == 'tstorm':
-            icon_path = 'icons/alt_icons/{}/tstorm.png'.format(size)
-        elif icon == 'chanceflurries':
-            icon_path = 'icons/alt_icons/{}/chanceflurries.png'.format(size)
-        elif icon == 'flurries':
-            icon_path = 'icons/alt_icons/{}/flurries.png'.format(size)
-        elif icon == 'chancetstorms':
-            icon_path = 'icons/alt_icons/{}/chancetstorms.png'.format(size)
-        else:
-            icon_path = 'icons/{}/unknown.png'.format(size)
+        icon_map = {
+            'clear': 'icons/{}/clear.png',
+            'mostlysunny': 'icons/{}/mostlysunny.png',
+            'partlycloudy': 'icons/{}/partlycloudy.png',
+            'cloudy': 'icons/{}/cloudy.png',
+            'fog': 'icons/{}/fog.png',
+            'hazy': 'icons/{}/hazy.png',
+            'rain': 'icons/{}/rain.png',
+            'chancerain': 'icons/{}/chancerain.png',
+            'chancesleet': 'icons/{}/chancesleet.png',
+            'snow': 'icons/{}/snow.png',
+            'sleet': 'icons/{}/sleet.png',
+            'wind': 'icons/alt_icons/{}/wind.png',
+            'chancesnow': 'icons/{}/chancesnow.png',
+            'tstorms': 'icons/{}/tstorms.png',
+            'tstorm': 'icons/{}/tstorm.png',
+            'chanceflurries': 'icons/{}/chanceflurries.png',
+            'flurries': 'icons/{}/flurries.png',
+            'chancetstorms': 'icons/{}/chancetstorms.png',
+        }
 
-        return path.join(path.dirname(__file__), icon_path)
+        base_dir = path.dirname(__file__)
+        icon_template = icon_map.get(icon, 'icons/{}/unknown.png')
+        icon_path = path.join(base_dir, icon_template.format(size))
+
+        if not path.isfile(icon_path):
+            logging.warning(
+                "Icon file not found: %s (icon=%s). Falling back to unknown.png.",
+                icon_path, icon)
+            icon_path = path.join(base_dir, 'icons/{}/unknown.png'.format(size))
+
+        return icon_path

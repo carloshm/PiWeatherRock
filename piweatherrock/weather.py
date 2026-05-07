@@ -81,7 +81,8 @@ class Weather:
                 break
 
             if not found:
-                self.log.exception("No suitable video driver found!")
+                self.log.critical("No suitable video driver found!")
+                sys.exit(1)
 
         size = (pygame.display.Info().current_w,
                 pygame.display.Info().current_h)
@@ -133,9 +134,9 @@ class Weather:
         verbosity of the logs is determined by the 'log_level' setting in
         the config file.
         """
-        lvl_str = f"logging.{self.config['log_level']}"
+        log_level = getattr(logging, self.config['log_level'].upper(), logging.INFO)
         log = logging.getLogger()
-        log.setLevel(eval(lvl_str))
+        log.setLevel(log_level)
         formatter = logging.Formatter(
             "%(asctime)s %(levelname)-8s %(message)s",
             datefmt='%Y-%m-%d %H:%M:%S')
@@ -154,7 +155,6 @@ class Weather:
         passed since last querying the api.
         """
         if (time.time() - self.last_update_check) > self.config["update_freq"]:
-            self.last_update_check = time.time()
             try:
                 self.weather = forecast(
                     self.config["ds_api_key"],
@@ -189,6 +189,9 @@ class Weather:
                         self.sunrise).strftime("%H:%M {}").format(sr_suffix)
                     self.sunset_string = datetime.datetime.fromtimestamp(
                         self.sunset).strftime("%H:%M {}").format(ss_suffix)
+
+                # Only update the check time after a successful fetch
+                self.last_update_check = time.time()
 
             except requests.exceptions.RequestException as e:
                 self.log.exception(f"Request exception: {e}")
