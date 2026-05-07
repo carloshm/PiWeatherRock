@@ -176,6 +176,9 @@ class PluginMedia:
 
     def _fit_surface(self, surface):
         fit = self.media_config.get("fit", "contain")
+        if fit not in ("contain", "cover", "stretch"):
+            self.log.warning("Unsupported media fit mode %s; using contain", fit)
+            fit = "contain"
         width, height = surface.get_size()
         if fit == "stretch":
             return pygame.transform.smoothscale(surface, (self.xmax, self.ymax))
@@ -206,6 +209,9 @@ class PluginMedia:
 
     def _start_video(self, path):
         fit = self.media_config.get("fit", "contain")
+        if fit not in ("contain", "cover", "stretch"):
+            self.log.warning("Unsupported media fit mode %s; using contain", fit)
+            fit = "contain"
         if fit == "cover":
             video_filter = (
                 "scale={0}:{1}:force_original_aspect_ratio=increase,"
