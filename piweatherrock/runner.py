@@ -33,6 +33,18 @@ UI_LOOP_FREQUENCY = 10
 
 
 class Runner:
+    SCREEN_PLUGIN_NAMES = {
+        'd': "daily",
+        'h': "hourly",
+        'i': "info",
+        'm': "media",
+    }
+    SCREEN_PLUGIN_ATTRS = {
+        'd': "daily",
+        'h': "hourly",
+        'i': "info",
+        'm': "media",
+    }
 
     def __init__(self):
         self.current_screen = None
@@ -348,20 +360,13 @@ class Runner:
             self.h_count += 1
 
     def screen_pause(self, screen):
-        plugin_name = {
-            'd': "daily",
-            'h': "hourly",
-            'i': "info",
-            'm': "media",
-        }.get(screen)
+        plugin_name = self.SCREEN_PLUGIN_NAMES.get(screen)
         if not plugin_name:
             return None
         return self.config["plugins"][plugin_name].get("pause", 60)
 
     def plugin_for_screen(self, screen):
-        return {
-            'd': self.daily,
-            'h': self.hourly,
-            'i': self.info,
-            'm': self.media,
-        }.get(screen)
+        plugin_attr = self.SCREEN_PLUGIN_ATTRS.get(screen)
+        if not plugin_attr:
+            return None
+        return getattr(self, plugin_attr)

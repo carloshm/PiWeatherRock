@@ -236,7 +236,7 @@ class PluginMedia:
             return None
 
     def _stop_video(self):
-        if self.video_process is None:
+        if not self._is_video_playing():
             return
         self.video_process.terminate()
         try:
@@ -245,6 +245,9 @@ class PluginMedia:
             self.video_process.kill()
             self.video_process.wait()
         self.video_process = None
+
+    def _is_video_playing(self):
+        return self.video_process is not None
 
     def _render_message(self, message):
         self.screen.fill((0, 0, 0))
