@@ -36,6 +36,7 @@ pwr-config-web -c ./piweatherrock/piweatherrock-config.json
 
 The config UI binds to `127.0.0.1:8888` by default. Use `--host` and `--port`
 only when you intentionally want to expose it elsewhere on your network.
+See the expanded visual guide in [`docs/README.md`](docs/README.md#aplicaci%C3%B3n-web-de-configuraci%C3%B3n).
 
 ## Installation
 
