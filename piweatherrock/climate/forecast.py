@@ -86,11 +86,6 @@ class Forecast(DataPoint):
     def refresh(self, timeout=None, **queries):
         self._queries = queries
         self.timeout = timeout
-        request_params = {
-            'params': self._queries,
-            'headers': {'Accept-Encoding': 'gzip'},
-            'timeout': timeout
-        }
 
         if _LOAD_FROM_FILE_:
             file_path = path.join(path.dirname(__file__),'data','example.json')
@@ -98,7 +93,10 @@ class Forecast(DataPoint):
 
             return super().__init__(data)
         else:
-            response = requests.get(self.url)
+            response = requests.get(
+                self.url,
+                headers={'Accept-Encoding': 'gzip'},
+                timeout=timeout if timeout is not None else 30)
             self.response_headers = response.headers
             if response.status_code != 200:
                 print(response.text)

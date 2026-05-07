@@ -21,8 +21,12 @@ class DataPoint(object):
             return setval()
 
         # set specific data handlers
-        if name in ('alerts', 'flags'):
-            return setval(eval(name.capitalize())(val))
+        _handlers = {
+            'alerts': Alerts,
+            'flags': Flags,
+        }
+        if name in _handlers:
+            return setval(_handlers[name](val))
 
         # data
         if isinstance(val, list):
