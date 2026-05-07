@@ -20,6 +20,21 @@ Weather settings are configured in `piweatherrock/piweatherrock-config.json`:
 - `lang`: Language for weather descriptions.
 - `timezone`: Your timezone (e.g., `Europe/Madrid`).
 - `update_freq`: How often to refresh weather data (in seconds).
+- `fullscreen`, `12hour_disp`, `icon_offset`: Display behavior.
+- `info_pause`, `info_delay`, `plugins`: Page rotation behavior.
+
+PiWeatherRock automatically checks the config file while `pwr-ui` is running.
+Valid changes are applied without restarting the display. If the JSON is invalid,
+the active configuration remains in use and the error is logged.
+
+You can edit the same JSON from the local web configuration UI:
+
+```bash
+pwr-config-web -c ./piweatherrock/piweatherrock-config.json
+```
+
+The config UI binds to `127.0.0.1:8888` by default. Use `--host` and `--port`
+only when you intentionally want to expose it elsewhere on your network.
 
 ## Release process
 
@@ -71,7 +86,13 @@ python3 -m pip install .
 pwr-ui -c ./piweatherrock/piweatherrock-config.json
 ```
 
-> **Note:** `pwr-ui` and `pwr-config-upgrade` are installed as console entry points via `pyproject.toml`. See [PEP 621](https://peps.python.org/pep-0621/) and [setup.py deprecation](https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html) for background.
+To configure from a browser:
+
+```bash
+pwr-config-web -c ./piweatherrock/piweatherrock-config.json
+```
+
+> **Note:** `pwr-ui`, `pwr-config-web`, and `pwr-config-upgrade` are installed as console entry points via `pyproject.toml`. See [PEP 621](https://peps.python.org/pep-0621/) and [setup.py deprecation](https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html) for background.
 
 ## Validate Service Data
 

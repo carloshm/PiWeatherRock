@@ -3,7 +3,6 @@
 # Copyright (c) 2017 Gene Liverman <gene@technicalissues.us>
 # Distributed under the MIT License (https://opensource.org/licenses/MIT)
 
-import json
 import pygame
 import sys
 import time
@@ -15,10 +14,21 @@ import time
 from pygame.locals import QUIT, VIDEORESIZE, KEYDOWN, K_KP_ENTER, K_q, K_d, K_h, K_i, K_s
 
 # local imports
+from piweatherrock.config_manager import (
+    ConfigError,
+    ConfigWatcher,
+    ROTATION_RELOAD_PATHS,
+    config_changed,
+    diff_config,
+    load_config,
+)
 from piweatherrock.weather import Weather
 from piweatherrock.plugin_weather_daily import PluginWeatherDaily
 from piweatherrock.plugin_weather_hourly import PluginWeatherHourly
 from piweatherrock.plugin_info import PluginInfo
+
+
+UI_LOOP_FREQUENCY = 10
 
 
 class Runner:
@@ -36,10 +46,11 @@ class Runner:
         self.daily = None
         self.hourly = None
         self.info = None
+        self.config_watcher = None
 
     def main(self, config_file):
-        with open(config_file, "r") as f:
-            self.config = json.load(f)
+        self.config = load_config(config_file)
+        self.config_watcher = ConfigWatcher(config_file)
 
         pygame.init()
         # Create an instance of the main application class
@@ -51,10 +62,7 @@ class Runner:
         self.info = PluginInfo(self.my_weather_rock)
 
         # Default to weather mode. Showing daily weather first.
-        self.current_screen = 'd'
-
-        self.d_count = 1
-        self.h_count = 0
+        self.switch_to_default_weather_screen()
 
         # Stay running while True
         self.running = True
@@ -80,6 +88,7 @@ class Runner:
         while self.running:
             # Look for and process keyboard events to change modes.
             self.process_pygame_events()
+            self.check_config_reload()
             self.screen_switcher()
 
             # Loop timer.
@@ -108,19 +117,11 @@ class Runner:
 
                 # On 'd' key, set mode to 'daily weather'.
                 elif event.key == K_d:
-                    self.current_screen = 'd'
-                    self.d_count = 1
-                    self.h_count = 0
-                    self.non_weather_timeout = 0
-                    self.periodic_info_activation = 0
+                    self.switch_to_weather_screen('d')
 
                 # on 'h' key, set mode to 'hourly weather'
                 elif event.key == K_h:
-                    self.current_screen = 'h'
-                    self.d_count = 0
-                    self.h_count = 1
-                    self.non_weather_timeout = 0
-                    self.periodic_info_activation = 0
+                    self.switch_to_weather_screen('h')
 
                 # On 'i' key, set mode to 'info'.
                 elif event.key == K_i:
@@ -139,6 +140,7 @@ class Runner:
         This function takes care of cycling through the different screens
         on a regular basis.
         """
+        self.ensure_current_screen_enabled()
 
         # Automatically switch back to weather display after a couple minutes
         if self.current_screen not in ('d', 'h'):
@@ -148,9 +150,11 @@ class Runner:
             self.h_count = 0
 
             # Default in config.json.sample: pause for 5 minutes on info screen
-            if self.non_weather_timeout > (self.config["info_pause"] * 10):
-                self.current_screen = 'd'
-                self.d_count = 1
+            enabled_weather_screens = self.enabled_weather_screens()
+            if (enabled_weather_screens
+                    and self.non_weather_timeout > (
+                        self.config["info_pause"] * UI_LOOP_FREQUENCY)):
+                self.switch_to_default_weather_screen()
                 self.my_weather_rock.log.info("Switching to weather mode")
         else:
             self.non_weather_timeout = 0
@@ -158,21 +162,15 @@ class Runner:
 
             # Default is to flip between 2 weather screens
             # for 15 minutes before showing info screen.
-            if self.periodic_info_activation > (self.config["info_delay"] * 10):
+            if self.periodic_info_activation > (
+                    self.config["info_delay"] * UI_LOOP_FREQUENCY):
                 self.current_screen = 'i'
                 self.my_weather_rock.log.info("Switching to info mode")
             elif (self.periodic_info_activation % (
                     ((self.config["plugins"]["daily"]["pause"] * self.d_count)
                         + (self.config["plugins"]["hourly"]["pause"] * self.h_count))
-                    * 10)) == 0:
-                if self.current_screen == 'd':
-                    self.my_weather_rock.log.info("Switching to HOURLY")
-                    self.current_screen = 'h'
-                    self.h_count += 1
-                else:
-                    self.my_weather_rock.log.info("Switching to DAILY")
-                    self.current_screen = 'd'
-                    self.d_count += 1
+                    * UI_LOOP_FREQUENCY)) == 0:
+                self.switch_to_next_weather_screen()
 
         # Daily Weather Display Mode
         if self.current_screen == 'd':
@@ -232,3 +230,97 @@ class Runner:
         except BaseException:
             self.my_weather_rock.log.exception(
                 f"Unexpected error: {sys.exc_info()[0]}")
+
+    def check_config_reload(self):
+        try:
+            changed = self.config_watcher.changed_config()
+        except ConfigError as e:
+            # Avoid repeated log messages for the same invalid config version.
+            self.config_watcher.sync_signature()
+            self.my_weather_rock.log.warning(
+                f"Ignoring invalid config reload: {e}")
+            return
+        except OSError as e:
+            self.my_weather_rock.log.warning(
+                f"Could not check config reload: {e}")
+            return
+
+        if changed is None:
+            return
+
+        signature, new_config = changed
+        changed_paths = diff_config(self.config, new_config)
+        try:
+            self.my_weather_rock.reload_config(new_config, changed_paths)
+        except Exception:
+            self.my_weather_rock.log.exception(
+                "Error applying config reload")
+            return
+
+        self.config = new_config
+        if config_changed(changed_paths, ROTATION_RELOAD_PATHS):
+            self.periodic_info_activation = 0
+            self.non_weather_timeout = 0
+            self.ensure_current_screen_enabled()
+
+        self.config_watcher.commit(signature)
+        self.my_weather_rock.log.info("Configuration reloaded")
+
+    def enabled_weather_screens(self):
+        enabled = []
+        if self.config["plugins"]["daily"].get("enabled", True):
+            enabled.append('d')
+        if self.config["plugins"]["hourly"].get("enabled", True):
+            enabled.append('h')
+        return enabled
+
+    def ensure_current_screen_enabled(self):
+        if self.current_screen in ('d', 'h'):
+            if self.current_screen not in self.enabled_weather_screens():
+                self.switch_to_default_weather_screen()
+
+    def switch_to_default_weather_screen(self):
+        enabled = self.enabled_weather_screens()
+        if not enabled:
+            self.current_screen = 'i'
+            self.d_count = 0
+            self.h_count = 0
+        else:
+            self.switch_to_weather_screen(enabled[0])
+
+    def switch_to_weather_screen(self, screen):
+        if screen not in self.enabled_weather_screens():
+            self.my_weather_rock.log.warning(
+                f"Ignoring disabled weather screen: {screen}")
+            return
+
+        self.current_screen = screen
+        self.d_count = 1 if screen == 'd' else 0
+        self.h_count = 1 if screen == 'h' else 0
+        self.non_weather_timeout = 0
+        self.periodic_info_activation = 0
+
+    def switch_to_next_weather_screen(self):
+        enabled = self.enabled_weather_screens()
+        if not enabled:
+            self.current_screen = 'i'
+            self.d_count = 0
+            self.h_count = 0
+            return
+
+        if self.current_screen == 'd' and 'h' in enabled:
+            self.advance_weather_screen('h', "Switching to HOURLY")
+        elif self.current_screen == 'h' and 'd' in enabled:
+            self.advance_weather_screen('d', "Switching to DAILY")
+        elif enabled[0] == 'd':
+            self.advance_weather_screen('d', "Staying on DAILY")
+        else:
+            self.advance_weather_screen('h', "Staying on HOURLY")
+
+    def advance_weather_screen(self, screen, message):
+        self.my_weather_rock.log.info(message)
+        self.current_screen = screen
+        if screen == 'd':
+            self.d_count += 1
+        else:
+            self.h_count += 1

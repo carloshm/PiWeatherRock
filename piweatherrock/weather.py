@@ -10,7 +10,6 @@ import platform
 import signal
 import sys
 import time
-import json
 import logging
 import logging.handlers
 
@@ -20,6 +19,14 @@ import pygame
 import requests
 
 # local imports
+from piweatherrock.config_manager import (
+    DISPLAY_RELOAD_PATHS,
+    LOG_RELOAD_PATHS,
+    SUN_TIME_RELOAD_PATHS,
+    WEATHER_RELOAD_PATHS,
+    config_changed,
+    load_config,
+)
 from piweatherrock.intl import intl
 
 
@@ -39,8 +46,7 @@ class Weather:
     """
 
     def __init__(self, config_file):
-        with open(config_file, "r") as f:
-            self.config = json.load(f)
+        self.config = load_config(config_file)
 
         #Initialize locale intl
         self.intl = intl()
@@ -165,30 +171,7 @@ class Weather:
                     lang=self.config["lang"],
                     timezone=self.config["timezone"])
                 
-                sunset_today = datetime.datetime.fromtimestamp(
-                    self.weather.daily[0].sunsetTime)
-                if datetime.datetime.now() < sunset_today:
-                    index = 0
-                    sr_suffix = self.intl.get_text(self.ui_lang,"today")
-                    ss_suffix = self.intl.get_text(self.ui_lang,"tonight")
-                else:
-                    index = 1
-                    sr_suffix = self.intl.get_text(self.ui_lang,"tomorrow")
-                    ss_suffix = self.intl.get_text(self.ui_lang,"tomorrow")
-
-                self.sunrise = self.weather.daily[index].sunriseTime
-                self.sunset = self.weather.daily[index].sunsetTime
-
-                if self.config["12hour_disp"]:
-                    self.sunrise_string = datetime.datetime.fromtimestamp(
-                        self.sunrise).strftime("%I:%M %p {}").format(sr_suffix)
-                    self.sunset_string = datetime.datetime.fromtimestamp(
-                        self.sunset).strftime("%I:%M %p {}").format(ss_suffix)
-                else:
-                    self.sunrise_string = datetime.datetime.fromtimestamp(
-                        self.sunrise).strftime("%H:%M {}").format(sr_suffix)
-                    self.sunset_string = datetime.datetime.fromtimestamp(
-                        self.sunset).strftime("%H:%M {}").format(ss_suffix)
+                self.update_sun_strings()
 
                 # Only update the check time after a successful fetch
                 self.last_update_check = time.time()
@@ -200,6 +183,63 @@ class Weather:
                 self.log.exception(f"Attribute error: {e}")
                 return False
         return True
+
+    def reload_config(self, new_config, changed_paths):
+        """
+        Apply a validated configuration change without restarting the UI.
+        """
+        self.config = new_config
+        self.ui_lang = self.config["ui_lang"]
+
+        if config_changed(changed_paths, LOG_RELOAD_PATHS):
+            self.log = self.get_logger()
+
+        if config_changed(changed_paths, DISPLAY_RELOAD_PATHS):
+            size = (pygame.display.Info().current_w,
+                    pygame.display.Info().current_h)
+            self.sizing(size)
+            self.screen.fill((0, 0, 0))
+            pygame.display.update()
+
+        if config_changed(changed_paths, WEATHER_RELOAD_PATHS):
+            self.last_update_check = 0
+            self.get_forecast()
+        elif config_changed(changed_paths, SUN_TIME_RELOAD_PATHS):
+            self.update_sun_strings()
+
+    def update_sun_strings(self):
+        """
+        Compute sunrise and sunset strings from current weather and display settings.
+        """
+        daily = getattr(self.weather, "daily", None)
+        if daily is None:
+            return
+
+        sunset_today = datetime.datetime.fromtimestamp(
+            daily[0].sunsetTime)
+
+        if datetime.datetime.now() < sunset_today:
+            index = 0
+            sr_suffix = self.intl.get_text(self.ui_lang, "today")
+            ss_suffix = self.intl.get_text(self.ui_lang, "tonight")
+        else:
+            index = 1
+            sr_suffix = self.intl.get_text(self.ui_lang, "tomorrow")
+            ss_suffix = self.intl.get_text(self.ui_lang, "tomorrow")
+
+        self.sunrise = daily[index].sunriseTime
+        self.sunset = daily[index].sunsetTime
+
+        if self.config["12hour_disp"]:
+            self.sunrise_string = datetime.datetime.fromtimestamp(
+                self.sunrise).strftime("%I:%M %p {}").format(sr_suffix)
+            self.sunset_string = datetime.datetime.fromtimestamp(
+                self.sunset).strftime("%I:%M %p {}").format(ss_suffix)
+        else:
+            self.sunrise_string = datetime.datetime.fromtimestamp(
+                self.sunrise).strftime("%H:%M {}").format(sr_suffix)
+            self.sunset_string = datetime.datetime.fromtimestamp(
+                self.sunset).strftime("%H:%M {}").format(ss_suffix)
 
     def screen_cap(self):
         """
