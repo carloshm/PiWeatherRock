@@ -179,7 +179,11 @@ class Runner:
             # Update / Refresh the display after each second.
             if self.seconds != time.localtime().tm_sec:
                 self.seconds = time.localtime().tm_sec
-                self.daily.disp_daily(self.my_weather_rock)
+                try:
+                    self.daily.disp_daily(self.my_weather_rock)
+                except Exception:
+                    self.my_weather_rock.log.exception(
+                        "Error rendering daily screen")
 
             # Once the screen is updated, we have a full second to get the
             # weather. Once per minute, check to see if its time to get a
@@ -192,7 +196,11 @@ class Runner:
             # Update / Refresh the display after each second.
             if self.seconds != time.localtime().tm_sec:
                 self.seconds = time.localtime().tm_sec
-                self.hourly.disp_hourly(self.my_weather_rock)
+                try:
+                    self.hourly.disp_hourly(self.my_weather_rock)
+                except Exception:
+                    self.my_weather_rock.log.exception(
+                        "Error rendering hourly screen")
 
             # Once the screen is updated, we have a full second to get the
             # weather. Once per minute, check to see if its time to get a
@@ -208,7 +216,11 @@ class Runner:
 
                 # Disaplay information about the application along with the
                 # time of sunrise and sunset.
-                self.info.disp_info(self.my_weather_rock)
+                try:
+                    self.info.disp_info(self.my_weather_rock)
+                except Exception:
+                    self.my_weather_rock.log.exception(
+                        "Error rendering info screen")
 
     def check_forecast(self):
         try:
