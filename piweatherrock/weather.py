@@ -208,11 +208,12 @@ class Weather:
             self.update_sun_strings()
 
     def update_sun_strings(self):
-        if not hasattr(self.weather, "daily"):
+        daily = getattr(self.weather, "daily", None)
+        if daily is None:
             return
 
         sunset_today = datetime.datetime.fromtimestamp(
-            self.weather.daily[0].sunsetTime)
+            daily[0].sunsetTime)
 
         if datetime.datetime.now() < sunset_today:
             index = 0
@@ -223,8 +224,8 @@ class Weather:
             sr_suffix = self.intl.get_text(self.ui_lang, "tomorrow")
             ss_suffix = self.intl.get_text(self.ui_lang, "tomorrow")
 
-        self.sunrise = self.weather.daily[index].sunriseTime
-        self.sunset = self.weather.daily[index].sunsetTime
+        self.sunrise = daily[index].sunriseTime
+        self.sunset = daily[index].sunsetTime
 
         if self.config["12hour_disp"]:
             self.sunrise_string = datetime.datetime.fromtimestamp(

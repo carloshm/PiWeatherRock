@@ -28,7 +28,7 @@ from piweatherrock.plugin_weather_hourly import PluginWeatherHourly
 from piweatherrock.plugin_info import PluginInfo
 
 
-LOOP_FREQUENCY_HZ = 10
+LOOPS_PER_SECOND = 10
 
 
 class Runner:
@@ -153,7 +153,7 @@ class Runner:
             enabled_weather_screens = self.enabled_weather_screens()
             if (enabled_weather_screens
                     and self.non_weather_timeout > (
-                        self.config["info_pause"] * LOOP_FREQUENCY_HZ)):
+                        self.config["info_pause"] * LOOPS_PER_SECOND)):
                 self.switch_to_default_weather_screen()
                 self.my_weather_rock.log.info("Switching to weather mode")
         else:
@@ -163,13 +163,13 @@ class Runner:
             # Default is to flip between 2 weather screens
             # for 15 minutes before showing info screen.
             if self.periodic_info_activation > (
-                    self.config["info_delay"] * LOOP_FREQUENCY_HZ):
+                    self.config["info_delay"] * LOOPS_PER_SECOND):
                 self.current_screen = 'i'
                 self.my_weather_rock.log.info("Switching to info mode")
             elif (self.periodic_info_activation % (
                     ((self.config["plugins"]["daily"]["pause"] * self.d_count)
                         + (self.config["plugins"]["hourly"]["pause"] * self.h_count))
-                    * LOOP_FREQUENCY_HZ)) == 0:
+                    * LOOPS_PER_SECOND)) == 0:
                 self.switch_to_next_weather_screen()
 
         # Daily Weather Display Mode
@@ -308,18 +308,18 @@ class Runner:
             return
 
         if self.current_screen == 'd' and 'h' in enabled:
-            self.my_weather_rock.log.info("Switching to HOURLY")
-            self.current_screen = 'h'
-            self.h_count += 1
+            self.advance_weather_screen('h', "Switching to HOURLY")
         elif self.current_screen == 'h' and 'd' in enabled:
-            self.my_weather_rock.log.info("Switching to DAILY")
-            self.current_screen = 'd'
-            self.d_count += 1
+            self.advance_weather_screen('d', "Switching to DAILY")
         elif enabled[0] == 'd':
-            self.my_weather_rock.log.info("Staying on DAILY")
-            self.current_screen = 'd'
+            self.advance_weather_screen('d', "Staying on DAILY")
+        else:
+            self.advance_weather_screen('h', "Staying on HOURLY")
+
+    def advance_weather_screen(self, screen, message):
+        self.my_weather_rock.log.info(message)
+        self.current_screen = screen
+        if screen == 'd':
             self.d_count += 1
         else:
-            self.my_weather_rock.log.info("Staying on HOURLY")
-            self.current_screen = 'h'
             self.h_count += 1
