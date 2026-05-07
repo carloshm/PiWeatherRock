@@ -3,7 +3,6 @@
 # Copyright (c) 2017 Gene Liverman <gene@technicalissues.us>
 # Distributed under the MIT License (https://opensource.org/licenses/MIT)
 
-import json
 import pygame
 import sys
 import time
@@ -15,6 +14,14 @@ import time
 from pygame.locals import QUIT, VIDEORESIZE, KEYDOWN, K_KP_ENTER, K_q, K_d, K_h, K_i, K_s
 
 # local imports
+from piweatherrock.config_manager import (
+    ConfigError,
+    ConfigWatcher,
+    ROTATION_RELOAD_PATHS,
+    config_changed,
+    diff_config,
+    load_config,
+)
 from piweatherrock.weather import Weather
 from piweatherrock.plugin_weather_daily import PluginWeatherDaily
 from piweatherrock.plugin_weather_hourly import PluginWeatherHourly
@@ -36,10 +43,11 @@ class Runner:
         self.daily = None
         self.hourly = None
         self.info = None
+        self.config_watcher = None
 
     def main(self, config_file):
-        with open(config_file, "r") as f:
-            self.config = json.load(f)
+        self.config = load_config(config_file)
+        self.config_watcher = ConfigWatcher(config_file)
 
         pygame.init()
         # Create an instance of the main application class
@@ -80,6 +88,7 @@ class Runner:
         while self.running:
             # Look for and process keyboard events to change modes.
             self.process_pygame_events()
+            self.check_config_reload()
             self.screen_switcher()
 
             # Loop timer.
@@ -232,3 +241,36 @@ class Runner:
         except BaseException:
             self.my_weather_rock.log.exception(
                 f"Unexpected error: {sys.exc_info()[0]}")
+
+    def check_config_reload(self):
+        try:
+            changed = self.config_watcher.changed_config()
+        except ConfigError as e:
+            self.config_watcher.sync_signature()
+            self.my_weather_rock.log.warning(
+                f"Ignoring invalid config reload: {e}")
+            return
+        except OSError as e:
+            self.my_weather_rock.log.warning(
+                f"Could not check config reload: {e}")
+            return
+
+        if changed is None:
+            return
+
+        signature, new_config = changed
+        changed_paths = diff_config(self.config, new_config)
+        try:
+            self.my_weather_rock.reload_config(new_config, changed_paths)
+        except Exception:
+            self.my_weather_rock.log.exception(
+                "Error applying config reload")
+            return
+
+        if config_changed(changed_paths, ROTATION_RELOAD_PATHS):
+            self.periodic_info_activation = 0
+            self.non_weather_timeout = 0
+
+        self.config = new_config
+        self.config_watcher.commit(signature)
+        self.my_weather_rock.log.info("Configuration reloaded")
