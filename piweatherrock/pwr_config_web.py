@@ -118,11 +118,12 @@ class ConfigWebApp:
         rows.append('</form>')
         rows.append('<p><a href="/status">{}</a></p>'.format(
             html.escape(self._text(config, "validate"))))
-        return self._page(self._text(config, "title"), "\n".join(rows))
+        return self._page(self._text(config, "title"), "\n".join(rows),
+                          self._language(config))
 
-    def _page(self, title, body):
+    def _page(self, title, body, language="en"):
         return """<!doctype html>
-<html lang="es">
+<html lang="{language}">
 <head>
   <meta charset="utf-8">
   <title>{title}</title>
@@ -139,7 +140,10 @@ class ConfigWebApp:
   <h1>{title}</h1>
   {body}
 </body>
-</html>""".format(title=html.escape(title), body=body)
+</html>""".format(
+            language=html.escape(language),
+            title=html.escape(title),
+            body=body)
 
     def _coerce_value(self, raw_value, field_type):
         if field_type == "bool":
@@ -153,10 +157,16 @@ class ConfigWebApp:
         return raw_value.strip()
 
     def _text(self, config, key):
+        language = self._language(config)
+        return TEXT.get(language, TEXT["en"])[key]
+
+    def _language(self, config):
         language = config.get("ui_lang", "en")
         if language not in TEXT:
             language = language.split("_")[0].split("-")[0]
-        return TEXT.get(language, TEXT["en"])[key]
+        if language not in TEXT:
+            language = "en"
+        return language
 
 
 def main():
