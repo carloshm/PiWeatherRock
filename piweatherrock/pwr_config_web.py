@@ -5,6 +5,7 @@
 import html
 import os
 from argparse import ArgumentParser
+from urllib.parse import urlencode
 
 import cherrypy
 
@@ -20,6 +21,30 @@ from piweatherrock.config_manager import (
 )
 
 
+TEXT = {
+    "en": {
+        "changes_applied": "Changes applied",
+        "config_error": "Configuration error",
+        "error": "Error",
+        "legend": "PiWeatherRock configuration",
+        "save": "Save changes",
+        "status_ok": "OK: valid configuration. The UI will apply changes automatically.",
+        "title": "PiWeatherRock Config",
+        "validate": "Validate configuration",
+    },
+    "es": {
+        "changes_applied": "Cambios aplicados",
+        "config_error": "Error de configuración",
+        "error": "Error",
+        "legend": "Configuración PiWeatherRock",
+        "save": "Guardar cambios",
+        "status_ok": "OK: configuración válida. La UI aplicará los cambios automáticamente.",
+        "title": "PiWeatherRock Config",
+        "validate": "Validar configuración",
+    },
+}
+
+
 class ConfigWebApp:
     def __init__(self, config_file):
         self.config_file = config_file
@@ -30,8 +55,8 @@ class ConfigWebApp:
             config = load_config(self.config_file)
             body = self._render_form(config, message)
         except ConfigError as exc:
-            body = self._page("Error de configuración", "<p>{}</p>".format(
-                html.escape(str(exc))))
+            body = self._page(TEXT["en"]["config_error"],
+                              "<p>{}</p>".format(html.escape(str(exc))))
         return body
 
     @cherrypy.expose
@@ -44,21 +69,21 @@ class ConfigWebApp:
                 set_config_value(config, path, value)
             validate_config(config)
             write_config_atomic(self.config_file, config)
-            raise cherrypy.HTTPRedirect("/?message=" +
-                                        "Cambios%20aplicados")
+            raise cherrypy.HTTPRedirect("/?" + urlencode({
+                "message": self._text(config, "changes_applied")}))
         except (ConfigError, ValueError) as exc:
             try:
                 config = load_config(self.config_file)
                 return self._render_form(config, "Error: {}".format(exc))
             except ConfigError:
-                return self._page("Error", "<p>{}</p>".format(
+                return self._page(TEXT["en"]["error"], "<p>{}</p>".format(
                     html.escape(str(exc))))
 
     @cherrypy.expose
     def status(self):
         try:
-            load_config(self.config_file)
-            return "OK: configuración válida. La UI aplicará los cambios automáticamente."
+            config = load_config(self.config_file)
+            return self._text(config, "status_ok")
         except ConfigError as exc:
             cherrypy.response.status = 400
             return "ERROR: {}".format(exc)
@@ -68,7 +93,8 @@ class ConfigWebApp:
         if message:
             rows.append('<p class="message">{}</p>'.format(html.escape(message)))
         rows.append('<form method="post" action="/save">')
-        rows.append('<fieldset><legend>Configuración PiWeatherRock</legend>')
+        rows.append('<fieldset><legend>{}</legend>'.format(
+            html.escape(self._text(config, "legend"))))
         for path, label, field_type in CONFIG_FORM_FIELDS:
             value = get_config_value(config, path)
             name = field_name(path)
@@ -87,10 +113,12 @@ class ConfigWebApp:
                     value=html.escape(str(value)),
                     step=step))
         rows.append('</fieldset>')
-        rows.append('<button type="submit">Guardar cambios</button>')
+        rows.append('<button type="submit">{}</button>'.format(
+            html.escape(self._text(config, "save"))))
         rows.append('</form>')
-        rows.append('<p><a href="/status">Validar configuración</a></p>')
-        return self._page("PiWeatherRock Config", "\n".join(rows))
+        rows.append('<p><a href="/status">{}</a></p>'.format(
+            html.escape(self._text(config, "validate"))))
+        return self._page(self._text(config, "title"), "\n".join(rows))
 
     def _page(self, title, body):
         return """<!doctype html>
@@ -123,6 +151,12 @@ class ConfigWebApp:
         if field_type == "float":
             return float(raw_value)
         return raw_value.strip()
+
+    def _text(self, config, key):
+        language = config.get("ui_lang", "en")
+        if language not in TEXT:
+            language = language.split("_")[0].split("-")[0]
+        return TEXT.get(language, TEXT["en"])[key]
 
 
 def main():

@@ -104,11 +104,6 @@ def load_config(config_file):
     return config
 
 
-def load_sample_config(sample_file):
-    """Load a sample/default config without requiring the target file to exist."""
-    return load_config(sample_file)
-
-
 def validate_config(config):
     """Validate required fields and value ranges."""
     errors = []
