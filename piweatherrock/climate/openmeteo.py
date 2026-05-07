@@ -154,11 +154,11 @@ def openmeteo_to_darksky(data, lang):
         darksky_data["hourly"]["icon"] = "unknown"
 
     # Safe defaults from hourly data (used by daily and currently sections)
-    _hourly_dewpoint = filtered_hourly_data["dewpoint_2m"][0] if filtered_num_hours > 0 else 0
-    _hourly_humidity = filtered_hourly_data["relativehumidity_2m"][0] / 100 if filtered_num_hours > 0 else 0
-    _hourly_pressure = filtered_hourly_data["surface_pressure"][0] if filtered_num_hours > 0 else 0
-    _hourly_cloudcover = filtered_hourly_data["cloudcover_low"][0] if filtered_num_hours > 0 else 0
-    _hourly_visibility = filtered_hourly_data["visibility"][0] if filtered_num_hours > 0 else 0
+    hourly_dewpoint = filtered_hourly_data["dewpoint_2m"][0] if filtered_num_hours > 0 else 0
+    hourly_humidity = filtered_hourly_data["relativehumidity_2m"][0] / 100 if filtered_num_hours > 0 else 0
+    hourly_pressure = filtered_hourly_data["surface_pressure"][0] if filtered_num_hours > 0 else 0
+    hourly_cloudcover = filtered_hourly_data["cloudcover_low"][0] if filtered_num_hours > 0 else 0
+    hourly_visibility = filtered_hourly_data["visibility"][0] if filtered_num_hours > 0 else 0
 
     # Daily weather data
     darksky_data["daily"] = {
@@ -199,17 +199,17 @@ def openmeteo_to_darksky(data, lang):
         "apparentTemperatureHighTime": 0,
         "apparentTemperatureLow": daily_data["apparent_temperature_min"][i],
         "apparentTemperatureLowTime": 0,
-        "dewPoint": _hourly_dewpoint,
-        "humidity": _hourly_humidity,
-        "pressure": _hourly_pressure,
+        "dewPoint": hourly_dewpoint,
+        "humidity": hourly_humidity,
+        "pressure": hourly_pressure,
         "windSpeed": daily_data["windspeed_10m_max"][i],
         "windGust": daily_data["windgusts_10m_max"][i],
         "windGustTime": 0,
         "windBearing": daily_data["winddirection_10m_dominant"][i],
-        "cloudCover": _hourly_cloudcover,
+        "cloudCover": hourly_cloudcover,
         "uvIndex": daily_data["uv_index_max"][i],
         "uvIndexTime": 0,
-        "visibility": _hourly_visibility,
+        "visibility": hourly_visibility,
         "ozone": 0,
         "temperatureMin": daily_data["temperature_2m_min"][i],
         "temperatureMinTime": 0,
@@ -233,15 +233,15 @@ def openmeteo_to_darksky(data, lang):
         "precipType": "rain",
         "temperature": json_data["current_weather"]["temperature"],
         "apparentTemperature": json_data["current_weather"]["temperature"],
-        "dewPoint": _hourly_dewpoint,
-        "humidity": _hourly_humidity,
-        "pressure": _hourly_pressure,
+        "dewPoint": hourly_dewpoint,
+        "humidity": hourly_humidity,
+        "pressure": hourly_pressure,
         "windSpeed": json_data["current_weather"]["windspeed"],
         "windGust": daily_data["windgusts_10m_max"][0],
         "windBearing": json_data["current_weather"]["winddirection"],
-        "cloudCover": _hourly_cloudcover,
+        "cloudCover": hourly_cloudcover,
         "uvIndex": daily_data["uv_index_max"][0],
-        "visibility": _hourly_visibility,
+        "visibility": hourly_visibility,
         "ozone": 0
         }
 
