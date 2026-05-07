@@ -32,6 +32,7 @@ class PluginMedia:
         self.current_item = None
         self.current_surface = None
         self.video_process = None
+        self.video_failed_path = None
         self.last_scan = 0
         self.signature = None
         self.get_rock_values(weather_rock)
@@ -72,9 +73,13 @@ class PluginMedia:
             self.screen.blit(self.current_surface, (0, 0))
             pygame.display.update()
         else:
+            if self.video_failed_path == path:
+                self._render_message("Video playback requires ffmpeg")
+                return
             if self.video_process is None:
                 self.video_process = self._start_video(path)
             if self.video_process is None:
+                self.video_failed_path = path
                 self._render_message("Video playback requires ffmpeg")
                 return
             frame = self.video_process.stdout.read(self.xmax * self.ymax * 3)
@@ -144,6 +149,7 @@ class PluginMedia:
     def _next_item(self):
         self._stop_video()
         self.current_surface = None
+        self.video_failed_path = None
         if not self.items:
             self.current_index = -1
             self.current_item = None
