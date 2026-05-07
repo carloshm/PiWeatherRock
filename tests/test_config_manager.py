@@ -9,6 +9,8 @@ from piweatherrock.config_manager import (
     diff_config,
     load_config,
     merge_defaults,
+    normalize_config,
+    validate_config,
     write_config_atomic,
 )
 
@@ -30,6 +32,15 @@ VALID_CONFIG = {
     "plugins": {
         "daily": {"pause": 60, "enabled": True},
         "hourly": {"pause": 60, "enabled": True},
+        "info": {"pause": 300, "enabled": True},
+        "media": {
+            "pause": 20,
+            "enabled": False,
+            "path": "",
+            "shuffle": False,
+            "fit": "contain",
+            "extensions": "jpg,jpeg,png,gif,bmp,mp4,mov,m4v,avi,webm",
+        },
     },
     "log_level": "INFO",
 }
@@ -80,6 +91,28 @@ class ConfigManagerTest(unittest.TestCase):
         merged = merge_defaults(partial, defaults)
         self.assertTrue(merged["plugins"]["daily"]["enabled"])
         self.assertEqual(merged["plugins"]["hourly"]["pause"], 60)
+
+    def test_normalize_config_adds_media_and_info_defaults(self):
+        partial = json.loads(json.dumps(VALID_CONFIG))
+        del partial["plugins"]["info"]
+        del partial["plugins"]["media"]
+        normalized = normalize_config(partial)
+        self.assertTrue(normalized["plugins"]["info"]["enabled"])
+        self.assertFalse(normalized["plugins"]["media"]["enabled"])
+
+    def test_validate_config_rejects_no_enabled_pages(self):
+        config = json.loads(json.dumps(VALID_CONFIG))
+        for plugin in config["plugins"].values():
+            plugin["enabled"] = False
+        with self.assertRaises(ConfigError):
+            validate_config(config)
+
+    def test_validate_config_requires_media_path_when_enabled(self):
+        config = json.loads(json.dumps(VALID_CONFIG))
+        config["plugins"]["media"]["enabled"] = True
+        config["plugins"]["media"]["path"] = ""
+        with self.assertRaises(ConfigError):
+            validate_config(config)
 
     def test_config_watcher_detects_file_replacement(self):
         with tempfile.TemporaryDirectory() as tmpdir:

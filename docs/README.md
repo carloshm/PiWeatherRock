@@ -4,7 +4,7 @@ Esta carpeta documenta el uso actual de PiWeatherRock y complementa las instrucc
 
 ## Qué muestra la aplicación
 
-PiWeatherRock es una interfaz de pantalla completa para Raspberry Pi u otros equipos con pantalla conectada. Consulta Open-Meteo, traduce los datos al formato interno heredado de Dark Sky y alterna entre pantallas de previsión diaria, previsión horaria e información general.
+PiWeatherRock es una interfaz de pantalla completa para Raspberry Pi u otros equipos con pantalla conectada. Consulta Open-Meteo, traduce los datos al formato interno heredado de Dark Sky y alterna entre pantallas de previsión diaria, previsión horaria, información general y una pantalla opcional de medios locales.
 
 ## Instalación actual resumida
 
@@ -58,11 +58,22 @@ La pantalla de información reduce el contenido visual para ayudar a evitar quem
 
 ![Captura de la pantalla de información](images/pantalla-informacion.svg)
 
+## Pantalla de medios locales
+
+La pantalla de medios locales funciona como marco digital. Lee imágenes y vídeos cortos de una carpeta local configurada en `plugins.media.path`, los escala a la pantalla y permite elegir el modo de ajuste:
+
+- `contain`: muestra el archivo completo con bandas si hace falta.
+- `cover`: llena toda la pantalla recortando lo necesario.
+- `stretch`: ajusta al tamaño de pantalla deformando si la proporción no coincide.
+
+Las imágenes soportadas son `jpg`, `jpeg`, `png`, `gif` y `bmp`. Los vídeos configurados (`mp4`, `mov`, `m4v`, `avi`, `webm`) se reproducen mediante `ffmpeg` si está instalado en el sistema; si no está disponible, la pantalla muestra un aviso. Se puede abrir manualmente con la tecla `m`.
+
 ## Controles principales
 
 - `d`: cambia a previsión diaria.
 - `h`: cambia a previsión horaria.
 - `i`: cambia a información general.
+- `m`: cambia a medios locales.
 - `s`: guarda una captura como `screenshot.jpeg`.
 - `q` o Intro del teclado numérico: cierra la aplicación.
 
@@ -76,4 +87,10 @@ Los valores se editan en `piweatherrock/piweatherrock-config.json`:
 - `units`: sistema de unidades; `si` usa métricas.
 - `fullscreen`: ejecuta en pantalla completa si es `true`.
 - `update_freq`: frecuencia de actualización de Open-Meteo en segundos.
-- `plugins.daily` y `plugins.hourly`: activación y tiempo de permanencia de las pantallas diaria y horaria.
+- `plugins.daily`, `plugins.hourly`, `plugins.info` y `plugins.media`: activación y tiempo de permanencia de cada pantalla.
+- `plugins.media.path`: carpeta local desde la que se leen imágenes y vídeos cortos.
+- `plugins.media.shuffle`: alterna el orden secuencial o aleatorio.
+- `plugins.media.fit`: modo de ajuste (`contain`, `cover` o `stretch`).
+- `plugins.media.extensions`: extensiones permitidas separadas por comas.
+
+La aplicación web `pwr-config-web` permite editar qué pantallas se visualizan y el tiempo de visualización de cada una. La configuración se recarga automáticamente en la UI principal cuando el JSON actualizado es válido.
