@@ -1,19 +1,19 @@
 {
-	"eu":{
-		"feels_like": "Sentitzen da:",
-		"wind": "Haizea:",
-		"humidity": "Hezetasuna:",
-		"umbrella": "Hartu aterkia!",
-		"no_umbrella": "Gaur ez hartu aterkia",
-		"today": "gaur",
-		"powered_by": "Weather rock Dark Sky-ri esker",
-		"tonight": "gaur gauean",
-		"tomorrow": "bihar",
-		"check_at": "Eguraldiaren iragarpena",
-		"sunrise": "Egunsentia: %{sunrise}",
-		"sunset": "Ilunabarra: %{sunset}",
-		"sunrise_at": "Egunsentia %{hour} hrs %{minute} min",
-		"sunset_at": "Ilunabarra %{hour} hrs %{minute} min",
-		"daylight": "Eguneko argia: %{hour} hrs %{minute} min"
-		}
+    "eu": {
+        "feels_like": "Sentsazioa:",
+        "wind": "Haizea:",
+        "humidity": "Hezetasuna:",
+        "umbrella": "Hartu aterkia!",
+        "no_umbrella": "Gaur ez da aterkirik behar.",
+        "today": "gaur",
+        "powered_by": "Weather rock Open-Meteori esker",
+        "tonight": "gaur gauean",
+        "tomorrow": "bihar",
+        "check_at": "Eguraldia egiaztatua",
+        "sunrise": "Egunsentia: %{sunrise}",
+        "sunset": "Ilunabarra: %{sunset}",
+        "sunrise_at": "Egunsentia %{hour} h %{minute} min barru",
+        "sunset_at": "Ilunabarra %{hour} h %{minute} min barru",
+        "daylight": "Eguneko argia: %{hour} h %{minute} min"
+    }
 }

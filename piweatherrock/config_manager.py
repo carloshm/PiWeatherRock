@@ -36,6 +36,8 @@ PLUGIN_FIELDS = {
     "pause": int,
 }
 
+SUPPORTED_LANGUAGES = ("en", "es", "ca", "gl", "eu")
+
 WEATHER_RELOAD_PATHS = {
     ("ds_api_key",),
     ("lat",),
@@ -136,6 +138,8 @@ def validate_config(config):
     _validate_positive_int(config, "update_freq", errors)
     _validate_positive_int(config, "info_pause", errors)
     _validate_positive_int(config, "info_delay", errors)
+    _validate_language(config, "lang", errors)
+    _validate_language(config, "ui_lang", errors)
 
     if isinstance(plugins, dict):
         for plugin_name in ("daily", "hourly"):
@@ -279,6 +283,13 @@ def _validate_positive_int(config, key, errors, display_name=None):
     if isinstance(value, int) and not isinstance(value, bool) and value <= 0:
         errors.append("Field '{}' must be greater than 0".format(
             display_name or key))
+
+
+def _validate_language(config, key, errors):
+    value = config.get(key)
+    if isinstance(value, str) and value not in SUPPORTED_LANGUAGES:
+        errors.append("Field '{}' must be one of: {}".format(
+            key, ", ".join(SUPPORTED_LANGUAGES)))
 
 
 def _collect_diff(path, old_value, new_value, changed):

@@ -17,7 +17,8 @@ Weather settings are configured in `piweatherrock/piweatherrock-config.json`:
 - `ds_api_key`: Identifier for the Open-Meteo request (no real API key needed). The name is a legacy reference from the Dark Sky era, kept for backward compatibility.
 - `lat` / `lon`: Your location coordinates.
 - `units`: Unit system (`si` for metric).
-- `lang`: Language for weather descriptions.
+- `lang`: Language for weather descriptions (`en`, `es`, `ca`, `gl`, `eu`).
+- `ui_lang`: Language for UI labels (`en`, `es`, `ca`, `gl`, `eu`).
 - `timezone`: Your timezone (e.g., `Europe/Madrid`).
 - `update_freq`: How often to refresh weather data (in seconds).
 - `fullscreen`, `12hour_disp`, `icon_offset`: Display behavior.
