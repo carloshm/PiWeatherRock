@@ -28,7 +28,7 @@ from piweatherrock.plugin_weather_hourly import PluginWeatherHourly
 from piweatherrock.plugin_info import PluginInfo
 
 
-LOOPS_PER_SECOND = 10
+UI_LOOP_FREQUENCY = 10
 
 
 class Runner:
@@ -153,7 +153,7 @@ class Runner:
             enabled_weather_screens = self.enabled_weather_screens()
             if (enabled_weather_screens
                     and self.non_weather_timeout > (
-                        self.config["info_pause"] * LOOPS_PER_SECOND)):
+                        self.config["info_pause"] * UI_LOOP_FREQUENCY)):
                 self.switch_to_default_weather_screen()
                 self.my_weather_rock.log.info("Switching to weather mode")
         else:
@@ -163,13 +163,13 @@ class Runner:
             # Default is to flip between 2 weather screens
             # for 15 minutes before showing info screen.
             if self.periodic_info_activation > (
-                    self.config["info_delay"] * LOOPS_PER_SECOND):
+                    self.config["info_delay"] * UI_LOOP_FREQUENCY):
                 self.current_screen = 'i'
                 self.my_weather_rock.log.info("Switching to info mode")
             elif (self.periodic_info_activation % (
                     ((self.config["plugins"]["daily"]["pause"] * self.d_count)
                         + (self.config["plugins"]["hourly"]["pause"] * self.h_count))
-                    * LOOPS_PER_SECOND)) == 0:
+                    * UI_LOOP_FREQUENCY)) == 0:
                 self.switch_to_next_weather_screen()
 
         # Daily Weather Display Mode
@@ -235,6 +235,7 @@ class Runner:
         try:
             changed = self.config_watcher.changed_config()
         except ConfigError as e:
+            # Avoid repeated log messages for the same invalid config version.
             self.config_watcher.sync_signature()
             self.my_weather_rock.log.warning(
                 f"Ignoring invalid config reload: {e}")

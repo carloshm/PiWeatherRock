@@ -208,6 +208,9 @@ class Weather:
             self.update_sun_strings()
 
     def update_sun_strings(self):
+        """
+        Compute sunrise and sunset strings from current weather and display settings.
+        """
         daily = getattr(self.weather, "daily", None)
         if daily is None:
             return
