@@ -19,6 +19,7 @@ class PluginMedia:
     """Displays images and short videos from a configured local folder."""
 
     SCAN_INTERVAL = 30
+    FONT_SIZE_RATIO = 0.06
 
     def __init__(self, weather_rock):
         self.config = None
@@ -259,7 +260,8 @@ class PluginMedia:
 
     def _render_message(self, message):
         self.screen.fill((0, 0, 0))
-        font = pygame.font.SysFont("freesans", max(18, int(self.ymax * 0.06)))
+        font = pygame.font.SysFont(
+            "freesans", max(18, int(self.ymax * self.FONT_SIZE_RATIO)))
         rendered = font.render(message, True, (255, 255, 255))
         width, height = rendered.get_size()
         self.screen.blit(

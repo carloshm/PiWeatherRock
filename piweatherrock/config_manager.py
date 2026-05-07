@@ -368,8 +368,9 @@ def _validate_media_plugin(plugin_config, errors):
 
 
 def _split_extensions(value):
-    return [part.strip().lower().lstrip(".")
-            for part in value.split(",") if part.strip()]
+    return [extension.lower().lstrip(".")
+            for extension in (part.strip() for part in value.split(","))
+            if extension]
 
 
 def _collect_diff(path, old_value, new_value, changed):
