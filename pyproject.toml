@@ -42,5 +42,6 @@ include = ["piweatherrock*"]
 piweatherrock = [
     "config.json-sample",
     "data/*.json",
+    "intl/data/*.json",
     "plugin_weather_common/icons/**/*",
 ]

@@ -5,38 +5,217 @@ import datetime
 import time
 from pytz import timezone
 
+WEATHER_TRANSLATIONS = {
+    0: {
+        "en": "Clear sky",
+        "es": "Cielo despejado",
+        "ca": "Cel clar",
+        "gl": "Ceo despexado",
+        "eu": "Zeru garbia",
+    },
+    1: {
+        "en": "Mainly clear",
+        "es": "Mayormente despejado",
+        "ca": "Majoritàriament clar",
+        "gl": "Maiormente despexado",
+        "eu": "Nagusiki garbi",
+    },
+    2: {
+        "en": "Partly cloudy",
+        "es": "Parcialmente nublado",
+        "ca": "Parcialment ennuvolat",
+        "gl": "Parcialmente nubrado",
+        "eu": "Hodei batzuk",
+    },
+    3: {
+        "en": "Overcast",
+        "es": "Nublado",
+        "ca": "Ennuvolat",
+        "gl": "Nubrado",
+        "eu": "Estalita",
+    },
+    45: {
+        "en": "Fog",
+        "es": "Niebla",
+        "ca": "Boira",
+        "gl": "Néboa",
+        "eu": "Lainoa",
+    },
+    48: {
+        "en": "Depositing rime fog",
+        "es": "Niebla con escarcha",
+        "ca": "Boira gebradora",
+        "gl": "Néboa con xeada",
+        "eu": "Antzigar-lainoa",
+    },
+    51: {
+        "en": "Drizzle: Light intensity",
+        "es": "Llovizna ligera",
+        "ca": "Plugim lleuger",
+        "gl": "Poalla lixeira",
+        "eu": "Zirimiri arina",
+    },
+    53: {
+        "en": "Drizzle: Moderate intensity",
+        "es": "Llovizna moderada",
+        "ca": "Plugim moderat",
+        "gl": "Poalla moderada",
+        "eu": "Zirimiri moderatua",
+    },
+    55: {
+        "en": "Drizzle: Dense intensity",
+        "es": "Llovizna intensa",
+        "ca": "Plugim intens",
+        "gl": "Poalla intensa",
+        "eu": "Zirimiri trinkoa",
+    },
+    56: {
+        "en": "Freezing Drizzle: Light intensity",
+        "es": "Llovizna engelante ligera",
+        "ca": "Plugim gelant lleuger",
+        "gl": "Poalla conxelante lixeira",
+        "eu": "Zirimiri izozkor arina",
+    },
+    57: {
+        "en": "Freezing Drizzle: Dense intensity",
+        "es": "Llovizna engelante intensa",
+        "ca": "Plugim gelant intens",
+        "gl": "Poalla conxelante intensa",
+        "eu": "Zirimiri izozkor trinkoa",
+    },
+    61: {
+        "en": "Rain: Slight intensity",
+        "es": "Lluvia ligera",
+        "ca": "Pluja lleugera",
+        "gl": "Chuvia lixeira",
+        "eu": "Euri arina",
+    },
+    63: {
+        "en": "Rain: Moderate intensity",
+        "es": "Lluvia moderada",
+        "ca": "Pluja moderada",
+        "gl": "Chuvia moderada",
+        "eu": "Euri moderatua",
+    },
+    65: {
+        "en": "Rain: Heavy intensity",
+        "es": "Lluvia intensa",
+        "ca": "Pluja intensa",
+        "gl": "Chuvia intensa",
+        "eu": "Euri handia",
+    },
+    66: {
+        "en": "Freezing Rain: Light intensity",
+        "es": "Lluvia engelante ligera",
+        "ca": "Pluja gelant lleugera",
+        "gl": "Chuvia conxelante lixeira",
+        "eu": "Euri izozkor arina",
+    },
+    67: {
+        "en": "Freezing Rain: Heavy intensity",
+        "es": "Lluvia engelante intensa",
+        "ca": "Pluja gelant intensa",
+        "gl": "Chuvia conxelante intensa",
+        "eu": "Euri izozkor handia",
+    },
+    71: {
+        "en": "Snow fall: Slight intensity",
+        "es": "Nevada ligera",
+        "ca": "Nevada lleugera",
+        "gl": "Nevada lixeira",
+        "eu": "Elur arina",
+    },
+    73: {
+        "en": "Snow fall: Moderate intensity",
+        "es": "Nevada moderada",
+        "ca": "Nevada moderada",
+        "gl": "Nevada moderada",
+        "eu": "Elur moderatua",
+    },
+    75: {
+        "en": "Snow fall: Heavy intensity",
+        "es": "Nevada intensa",
+        "ca": "Nevada intensa",
+        "gl": "Nevada intensa",
+        "eu": "Elur handia",
+    },
+    77: {
+        "en": "Snow grains",
+        "es": "Granos de nieve",
+        "ca": "Grans de neu",
+        "gl": "Grans de neve",
+        "eu": "Elur-aleak",
+    },
+    80: {
+        "en": "Rain showers: Slight intensity",
+        "es": "Chubascos ligeros",
+        "ca": "Ruixats lleugers",
+        "gl": "Chuvascos lixeiros",
+        "eu": "Zaparrada arinak",
+    },
+    81: {
+        "en": "Rain showers: Moderate intensity",
+        "es": "Chubascos moderados",
+        "ca": "Ruixats moderats",
+        "gl": "Chuvascos moderados",
+        "eu": "Zaparrada moderatuak",
+    },
+    82: {
+        "en": "Rain showers: Violent intensity",
+        "es": "Chubascos fuertes",
+        "ca": "Ruixats forts",
+        "gl": "Chuvascos fortes",
+        "eu": "Zaparrada handiak",
+    },
+    85: {
+        "en": "Snow showers: Slight intensity",
+        "es": "Chubascos de nieve ligeros",
+        "ca": "Ruixats de neu lleugers",
+        "gl": "Chuvascos de neve lixeiros",
+        "eu": "Elur-zaparrada arinak",
+    },
+    86: {
+        "en": "Snow showers: Heavy intensity",
+        "es": "Chubascos de nieve intensos",
+        "ca": "Ruixats de neu intensos",
+        "gl": "Chuvascos de neve intensos",
+        "eu": "Elur-zaparrada handiak",
+    },
+    95: {
+        "en": "Thunderstorm: Slight or moderate",
+        "es": "Tormenta eléctrica",
+        "ca": "Tempesta elèctrica",
+        "gl": "Treboada",
+        "eu": "Ekaitza",
+    },
+    96: {
+        "en": "Thunderstorm with slight hail",
+        "es": "Tormenta eléctrica con granizo ligero",
+        "ca": "Tempesta amb calamarsa lleugera",
+        "gl": "Treboada con sarabia lixeira",
+        "eu": "Ekaitza txingor arinarekin",
+    },
+    99: {
+        "en": "Thunderstorm with heavy hail",
+        "es": "Tormenta eléctrica con granizo intenso",
+        "ca": "Tempesta amb calamarsa intensa",
+        "gl": "Treboada con sarabia intensa",
+        "eu": "Ekaitza txingor handiarekin",
+    },
+}
+
+UNKNOWN_WEATHER = {
+    "en": "Unknown",
+    "es": "Desconocido",
+    "ca": "Desconegut",
+    "gl": "Descoñecido",
+    "eu": "Ezezaguna",
+}
+
+
 def get_weather_translations(lang, wmocode):
-    weather_translations = {
-      0: {"en": "Clear sky", "es": "Cielo despejado"},
-      1: {"en": "Mainly clear", "es": "Mayormente despejado"},
-      2: {"en": "Partly cloudy", "es": "Parcialmente nublado"},
-      3: {"en": "Overcast", "es": "Nublado"},
-      45: {"en": "Fog", "es": "Neblina"},
-      48: {"en": "Depositing rime fog", "es": "Niebla de escarcha"},
-      51: {"en": "Drizzle: Light intensity", "es": "Chispeo ligero"},
-      53: {"en": "Drizzle: Moderate intensity", "es": "Chispeo moderado"},
-      55: {"en": "Drizzle: Dense intensity", "es": "Chispeo intenso"},
-      56: {"en": "Freezing Drizzle: Light intensity", "es": "Llovizna engelante"},
-      57: {"en": "Freezing Drizzle: Dense intensity", "es": "Llovizna engelante intensa"},
-      61: {"en": "Rain: Slight intensity", "es": "Chubascos"},
-      63: {"en": "Rain: Moderate intensity", "es": "Chubascos"},
-      65: {"en": "Rain: Heavy intensity", "es": "Lluvia intensa"},
-      66: {"en": "Freezing Rain: Light intensity", "es": "Lluvia engelante"},
-      67: {"en": "Freezing Rain: Heavy intensity", "es": "Lluvia engelante intensa"},
-      71: {"en": "Snow fall: Slight intensity", "es": "Nevada"},
-      73: {"en": "Snow fall: Moderate intensity", "es": "Nevada densa"},
-      75: {"en": "Snow fall: Heavy intensity", "es": "Nevada intensa"},
-      77: {"en": "Snow grains", "es": "Granos de nieve"},
-      80: {"en": "Rain showers: Slight intensity", "es": "Chubascos"},
-      81: {"en": "Rain showers: Moderate intensity", "es": "Lluvia moderada"},
-      82: {"en": "Rain showers: Violent intensity", "es": "Lluvia fuerte"},
-      85: {"en": "Snow showers: Slight intensity", "es": "Nevadas"},
-      86: {"en": "Snow showers: Heavy intensity", "es": "Nevadas intensa"},
-      95: {"en": "Thunderstorm: Slight or moderate", "es": "Tormenta eléctrica"},
-      96: {"en": "Thunderstorm with slight hail", "es": "Tormenta eléctrica con granizo"},
-      99: {"en": "Thunderstorm with heavy hail", "es": "Tormenta eléctrica con granizado intenso"}
-    }
-    return weather_translations.get(wmocode, {}).get(lang, "Unknown" if lang == "en" else "Desconocido")
+    return WEATHER_TRANSLATIONS.get(wmocode, {}).get(
+        lang, UNKNOWN_WEATHER.get(lang, UNKNOWN_WEATHER["en"]))
 
 def get_darksky_icon(wmocode):
     icon_map = {
