@@ -8,32 +8,35 @@ PiWeatherRock es una interfaz de pantalla completa para Raspberry Pi u otros equ
 
 ## Instalación actual resumida
 
-La instalación vigente usa el empaquetado definido en `pyproject.toml`:
+La instalación vigente usa el empaquetado definido en `pyproject.toml`.
 
-1. Instalar dependencias del sistema y crear un entorno virtual. En Raspberry Pi/Linux se puede usar:
+En Raspberry Pi/Linux se puede usar el script del repositorio:
 
-   ```bash
-   ./install.sh Europe/Madrid
-   ```
+```bash
+./install.sh Europe/Madrid
+```
 
-2. Activar el entorno virtual e instalar el paquete:
+El script instala dependencias del sistema, crea el entorno virtual `~/pwr-env` e instala el paquete con `pip install .`.
 
-   ```bash
-   source ~/pwr-env/bin/activate
-   python3 -m pip install .
-   ```
+Después, activa el entorno, crea la configuración desde la plantilla y ejecuta el entry point actual:
 
-3. Crear la configuración desde la plantilla y editar ubicación, zona horaria, idioma y opciones de pantalla:
+```bash
+source ~/pwr-env/bin/activate
+cp piweatherrock/config.json-sample piweatherrock/piweatherrock-config.json
+# Edita piweatherrock/piweatherrock-config.json con ubicación, zona horaria, idioma y opciones de pantalla.
+pwr-ui -c ./piweatherrock/piweatherrock-config.json
+```
 
-   ```bash
-   cp piweatherrock/config.json-sample piweatherrock/piweatherrock-config.json
-   ```
+Para una instalación manual o de desarrollo:
 
-4. Ejecutar la aplicación con el entry point actual:
-
-   ```bash
-   pwr-ui -c ./piweatherrock/piweatherrock-config.json
-   ```
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install --upgrade pip setuptools wheel
+python3 -m pip install .
+cp piweatherrock/config.json-sample piweatherrock/piweatherrock-config.json
+pwr-ui -c ./piweatherrock/piweatherrock-config.json
+```
 
 También queda disponible `pwr-config-upgrade` para actualizar configuraciones antiguas.
 
