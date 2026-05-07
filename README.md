@@ -28,6 +28,7 @@ Weather settings are configured in `piweatherrock/piweatherrock-config.json`:
 - `plugins.media`: Local media screen settings for images and short videos
   loaded from a folder. Configure `enabled`, `pause`, `path`, `shuffle`, `fit`
   (`contain`, `cover`, or `stretch`), and allowed `extensions`.
+  The folder in `path` must already exist before enabling this screen.
 
 PiWeatherRock automatically checks the config file while `pwr-ui` is running.
 Valid changes are applied without restarting the display. If the JSON is invalid,

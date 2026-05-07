@@ -21,6 +21,7 @@ class PluginMedia:
 
     SCAN_INTERVAL = 30
     FONT_SIZE_RATIO = 0.06
+    VIDEO_READ_TIMEOUT = 0.2
 
     def __init__(self, weather_rock):
         self.config = None
@@ -277,7 +278,8 @@ class PluginMedia:
             if not self.video_buffer:
                 return b""
 
-        ready, _, _ = select.select([process.stdout], [], [], 0.2)
+        ready, _, _ = select.select(
+            [process.stdout], [], [], self.VIDEO_READ_TIMEOUT)
         if not ready:
             if process.poll() is not None:
                 return b""

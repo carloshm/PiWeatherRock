@@ -33,6 +33,8 @@ UI_LOOP_FREQUENCY = 10
 
 
 class Runner:
+    # Keyboard shortcuts and rotation state use short screen IDs; config stores
+    # the matching plugin names under the "plugins" object.
     SCREEN_TO_PLUGIN_NAME = {
         'd': "daily",
         'h': "hourly",

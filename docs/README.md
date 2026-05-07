@@ -60,7 +60,7 @@ La pantalla de información reduce el contenido visual para ayudar a evitar quem
 
 ## Pantalla de medios locales
 
-La pantalla de medios locales funciona como marco digital. Lee imágenes y vídeos cortos de una carpeta local configurada en `plugins.media.path`, los escala a la pantalla y permite elegir el modo de ajuste:
+La pantalla de medios locales funciona como marco digital. Lee imágenes y vídeos cortos de una carpeta local configurada en `plugins.media.path`, que debe existir antes de activar `plugins.media.enabled`, los escala a la pantalla y permite elegir el modo de ajuste:
 
 - `contain`: muestra el archivo completo con bandas si hace falta.
 - `cover`: llena toda la pantalla recortando lo necesario.
