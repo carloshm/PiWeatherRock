@@ -84,6 +84,7 @@ class PluginMedia:
                 return
             frame = self.video_process.stdout.read(self.xmax * self.ymax * 3)
             if len(frame) != self.xmax * self.ymax * 3:
+                self.log.info("Finished media video %s", path)
                 self._next_item()
                 return
             surface = pygame.image.frombuffer(frame, (self.xmax, self.ymax), "RGB")
@@ -108,7 +109,14 @@ class PluginMedia:
         video_ext = set(MEDIA_VIDEO_EXTENSIONS)
         configured_ext = self._configured_extensions()
         items = []
-        for name in sorted(os.listdir(media_path)):
+        try:
+            names = sorted(os.listdir(media_path))
+        except OSError:
+            self.log.exception("Could not scan media directory %s", media_path)
+            self.items = []
+            return
+
+        for name in names:
             full_path = os.path.join(media_path, name)
             if not os.path.isfile(full_path):
                 continue

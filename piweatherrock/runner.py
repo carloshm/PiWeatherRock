@@ -39,12 +39,6 @@ class Runner:
         'i': "info",
         'm': "media",
     }
-    SCREEN_PLUGIN_ATTRS = {
-        'd': "daily",
-        'h': "hourly",
-        'i': "info",
-        'm': "media",
-    }
 
     def __init__(self):
         self.current_screen = None
@@ -366,7 +360,7 @@ class Runner:
         return self.config["plugins"][plugin_name].get("pause", 60)
 
     def plugin_for_screen(self, screen):
-        plugin_attr = self.SCREEN_PLUGIN_ATTRS.get(screen)
+        plugin_attr = self.SCREEN_PLUGIN_NAMES.get(screen)
         if not plugin_attr:
             return None
         return getattr(self, plugin_attr)
