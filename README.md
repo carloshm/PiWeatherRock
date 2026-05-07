@@ -56,6 +56,15 @@ git push origin main
 
 ## Run changes
 
+Before running for the first time, create your configuration file from the sample:
+
+```bash
+cp piweatherrock/config.json-sample piweatherrock/piweatherrock-config.json
+# Edit piweatherrock/piweatherrock-config.json with your coordinates, timezone, etc.
+```
+
+Then install and run:
+
 ```bash
 python3 -m pip install --upgrade setuptools wheel
 python3 -m pip install .
