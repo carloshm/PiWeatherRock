@@ -37,6 +37,49 @@ pwr-config-web -c ./piweatherrock/piweatherrock-config.json
 The config UI binds to `127.0.0.1:8888` by default. Use `--host` and `--port`
 only when you intentionally want to expose it elsewhere on your network.
 
+## Installation
+
+PiWeatherRock is packaged with `pyproject.toml` and installs the current
+console commands `pwr-ui` and `pwr-config-upgrade`.
+
+### Raspberry Pi / Linux
+
+Use the installation script from the repository root:
+
+```bash
+git clone https://github.com/carloshm/PiWeatherRock.git
+cd PiWeatherRock
+./install.sh Europe/Madrid
+```
+
+The optional argument is the system timezone. The script installs the required
+system packages, creates a virtual environment at `~/pwr-env`, installs
+PiWeatherRock with `pip install .`, and prints the commands needed to run the
+application.
+
+Before starting the UI, create and edit your configuration file:
+
+```bash
+source ~/pwr-env/bin/activate
+cp piweatherrock/config.json-sample piweatherrock/piweatherrock-config.json
+# Edit piweatherrock/piweatherrock-config.json with your coordinates, timezone, language, and display options.
+pwr-ui -c ./piweatherrock/piweatherrock-config.json
+```
+
+### Manual or development installation
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install --upgrade pip setuptools wheel
+python3 -m pip install .
+cp piweatherrock/config.json-sample piweatherrock/piweatherrock-config.json
+# Edit piweatherrock/piweatherrock-config.json before running.
+pwr-ui -c ./piweatherrock/piweatherrock-config.json
+```
+
+See [`docs/`](docs/) for an application walkthrough with screenshots.
+
 ## Release process
 
 - Update version in `pyproject.toml` according to the types of changes made
@@ -72,17 +115,10 @@ git push origin main
 
 ## Run changes
 
-Before running for the first time, create your configuration file from the sample:
+After making code changes in a local checkout, reinstall the package in your
+active virtual environment and run the UI with your configuration file:
 
 ```bash
-cp piweatherrock/config.json-sample piweatherrock/piweatherrock-config.json
-# Edit piweatherrock/piweatherrock-config.json with your coordinates, timezone, etc.
-```
-
-Then install and run:
-
-```bash
-python3 -m pip install --upgrade setuptools wheel
 python3 -m pip install .
 pwr-ui -c ./piweatherrock/piweatherrock-config.json
 ```
