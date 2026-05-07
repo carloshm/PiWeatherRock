@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "piweatherrock"
+version = "2.2.1"
+description = "Provides forecast data from ClimaCell for PiWeatherRock"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.7"
+authors = [
+    { name = "Gene Liverman", email = "gene@technicalissues.us" },
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+]
+dependencies = [
+    "pygame",
+    "pyserial",
+    "requests",
+    "cherrypy",
+    "babel",
+    "python-i18n",
+    "pytz",
+    "piweatherrock-webconfig==1.5.0",
+]
+
+[project.urls]
+Homepage = "https://piweatherrock.technicalissues.us"
+
+[project.scripts]
+pwr-ui = "piweatherrock.pwr_ui:main"
+pwr-config-upgrade = "piweatherrock.pwr_config_upgrade:main"
+
+[tool.setuptools.packages.find]
+include = ["piweatherrock*"]
+
+[tool.setuptools.package-data]
+piweatherrock = [
+    "config.json-sample",
+    "data/*.json",
+    "plugin_weather_common/icons/**/*",
+]
