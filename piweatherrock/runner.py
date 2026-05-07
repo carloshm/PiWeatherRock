@@ -28,7 +28,7 @@ from piweatherrock.plugin_weather_hourly import PluginWeatherHourly
 from piweatherrock.plugin_info import PluginInfo
 
 
-TICKS_PER_SECOND = 10
+LOOP_FREQUENCY_HZ = 10
 
 
 class Runner:
@@ -153,7 +153,7 @@ class Runner:
             enabled_weather_screens = self.enabled_weather_screens()
             if (enabled_weather_screens
                     and self.non_weather_timeout > (
-                        self.config["info_pause"] * TICKS_PER_SECOND)):
+                        self.config["info_pause"] * LOOP_FREQUENCY_HZ)):
                 self.switch_to_default_weather_screen()
                 self.my_weather_rock.log.info("Switching to weather mode")
         else:
@@ -163,13 +163,13 @@ class Runner:
             # Default is to flip between 2 weather screens
             # for 15 minutes before showing info screen.
             if self.periodic_info_activation > (
-                    self.config["info_delay"] * TICKS_PER_SECOND):
+                    self.config["info_delay"] * LOOP_FREQUENCY_HZ):
                 self.current_screen = 'i'
                 self.my_weather_rock.log.info("Switching to info mode")
             elif (self.periodic_info_activation % (
                     ((self.config["plugins"]["daily"]["pause"] * self.d_count)
                         + (self.config["plugins"]["hourly"]["pause"] * self.h_count))
-                    * TICKS_PER_SECOND)) == 0:
+                    * LOOP_FREQUENCY_HZ)) == 0:
                 self.switch_to_next_weather_screen()
 
         # Daily Weather Display Mode

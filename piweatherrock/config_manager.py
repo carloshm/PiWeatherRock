@@ -254,7 +254,7 @@ class ConfigWatcher:
 
 def file_signature(config_file):
     stat = os.stat(config_file)
-    mtime = getattr(stat, "st_mtime_ns", int(stat.st_mtime * 1000000000))
+    mtime = getattr(stat, "st_mtime_ns", int(stat.st_mtime * 1e9))
     return mtime, stat.st_size
 
 

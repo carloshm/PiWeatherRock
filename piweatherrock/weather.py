@@ -171,9 +171,7 @@ class Weather:
                     lang=self.config["lang"],
                     timezone=self.config["timezone"])
                 
-                sunset_today = datetime.datetime.fromtimestamp(
-                    self.weather.daily[0].sunsetTime)
-                self.update_sun_strings(sunset_today)
+                self.update_sun_strings()
 
                 # Only update the check time after a successful fetch
                 self.last_update_check = time.time()
@@ -209,13 +207,12 @@ class Weather:
         elif config_changed(changed_paths, SUN_TIME_RELOAD_PATHS):
             self.update_sun_strings()
 
-    def update_sun_strings(self, sunset_today=None):
+    def update_sun_strings(self):
         if not hasattr(self.weather, "daily"):
             return
 
-        if sunset_today is None:
-            sunset_today = datetime.datetime.fromtimestamp(
-                self.weather.daily[0].sunsetTime)
+        sunset_today = datetime.datetime.fromtimestamp(
+            self.weather.daily[0].sunsetTime)
 
         if datetime.datetime.now() < sunset_today:
             index = 0
