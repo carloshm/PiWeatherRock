@@ -1,11 +1,8 @@
 # PiWeatherRock
 
-![GitHub](https://img.shields.io/github/license/genebean/PiWeatherRock)
-![PyPI](https://img.shields.io/pypi/v/piweatherrock)
+![GitHub](https://img.shields.io/github/license/carloshm/PiWeatherRock)
 
 PiWeatherRock displays local weather on (almost) any screen you connect to a Raspberry Pi. It also works on other platforms, including macOS.
-
-More information about the project and full documentation can be found at https://piweatherrock.technicalissues.us. Be sure to check out the getting started guide under the documentation link there for instruction on how to set everything up.
 
 ## Weather API
 
@@ -26,9 +23,10 @@ Weather settings are configured in `piweatherrock/piweatherrock-config.json`:
 
 ## Release process
 
-- edit `version.py` according to the types of changes made
-- edit `requirements.txt` if needed
-- `python3 setup.py sdist bdist_wheel`
+- Update version in `pyproject.toml` according to the types of changes made
+- Update `requirements.txt` if needed
+- `python3 -m pip install --upgrade build twine`
+- `python3 -m build`
 - `tar tzf dist/piweatherrock-*.tar.gz`
 - `twine check dist/*`
 - [optional] `twine upload --repository-url https://test.pypi.org/legacy/ dist/*`
@@ -37,32 +35,34 @@ Weather settings are configured in `piweatherrock/piweatherrock-config.json`:
 
 ## Local Development process
 
-```python
+```bash
 python3 -m venv env_name
 source env_name/bin/activate
 ```
 
-```python
+```bash
 git clone https://github.com/carloshm/PiWeatherRock.git
-cd PiWeatherRock  
-git pull (for any additional external change after a while)
+cd PiWeatherRock
+git pull  # for any additional external change after a while
 ```
 
 Make changes
 
-```python
+```bash
 git add .
 git commit -m "changes description"
 git push origin main
 ```
 
-## Run changes https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html
+## Run changes
 
-```python
+```bash
 python3 -m pip install --upgrade setuptools wheel
 python3 -m pip install .
-python3 ./scripts/pwr-ui -c ./piweatherrock/piweatherrock-config.json
+pwr-ui -c ./piweatherrock/piweatherrock-config.json
 ```
+
+> **Note:** `pwr-ui` and `pwr-config-upgrade` are installed as console entry points via `pyproject.toml`. See [PEP 621](https://peps.python.org/pep-0621/) and [setup.py deprecation](https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html) for background.
 
 ## Validate Service Data
 

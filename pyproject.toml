@@ -4,13 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "piweatherrock"
-version = "2.2.1"
-description = "Provides forecast data from ClimaCell for PiWeatherRock"
+version = "3.0.0"
+description = "Displays local weather on a Raspberry Pi using the Open-Meteo API"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.6"
 authors = [
     { name = "Gene Liverman", email = "gene@technicalissues.us" },
+    { name = "Carlos HM" },
 ]
 classifiers = [
     "License :: OSI Approved :: MIT License",
@@ -27,7 +28,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://piweatherrock.technicalissues.us"
+Homepage = "https://github.com/carloshm/PiWeatherRock"
 
 [project.scripts]
 pwr-ui = "piweatherrock.pwr_ui:main"

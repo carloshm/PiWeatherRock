@@ -7,6 +7,9 @@
 - No API key is required for non-commercial use with Open-Meteo
 - Added internationalization support with `intl` module
 - Updated configuration to use Open-Meteo endpoint
+- Migrated packaging from `setup.py` to `pyproject.toml` (PEP 621)
+- Added `timezone` to configuration
+- Updated project metadata and homepage to carloshm fork
 
 ## [2.1.0](https://github.com/genebean/PiWeatherRock/tree/2.1.0)
 
