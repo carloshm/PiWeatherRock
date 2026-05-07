@@ -31,6 +31,26 @@ TEXT = {
         "status_ok": "OK: valid configuration. The UI will apply changes automatically.",
         "title": "PiWeatherRock Config",
         "validate": "Validate configuration",
+        "labels": {
+            "lat": "Latitude",
+            "lon": "Longitude",
+            "timezone": "Timezone",
+            "ds_api_key": "Open-Meteo identifier",
+            "units": "Units",
+            "lang": "Weather language",
+            "ui_lang": "UI language",
+            "update_freq": "Forecast frequency (seconds)",
+            "fullscreen": "Fullscreen",
+            "12hour_disp": "12-hour format",
+            "icon_offset": "Icon offset",
+            "info_pause": "Info pause (seconds)",
+            "info_delay": "Info delay (seconds)",
+            "daily_enabled": "Daily page enabled",
+            "daily_pause": "Daily pause (seconds)",
+            "hourly_enabled": "Hourly page enabled",
+            "hourly_pause": "Hourly pause (seconds)",
+            "log_level": "Log level",
+        },
     },
     "es": {
         "changes_applied": "Cambios aplicados",
@@ -41,6 +61,26 @@ TEXT = {
         "status_ok": "OK: configuración válida. La UI aplicará los cambios automáticamente.",
         "title": "PiWeatherRock Config",
         "validate": "Validar configuración",
+        "labels": {
+            "lat": "Latitud",
+            "lon": "Longitud",
+            "timezone": "Zona horaria",
+            "ds_api_key": "Identificador Open-Meteo",
+            "units": "Unidades",
+            "lang": "Idioma meteorológico",
+            "ui_lang": "Idioma de interfaz",
+            "update_freq": "Frecuencia forecast (segundos)",
+            "fullscreen": "Pantalla completa",
+            "12hour_disp": "Formato 12 horas",
+            "icon_offset": "Offset de iconos",
+            "info_pause": "Pausa info (segundos)",
+            "info_delay": "Retraso info (segundos)",
+            "daily_enabled": "Página diaria activa",
+            "daily_pause": "Pausa diaria (segundos)",
+            "hourly_enabled": "Página horaria activa",
+            "hourly_pause": "Pausa horaria (segundos)",
+            "log_level": "Nivel de log",
+        },
     },
 }
 
@@ -63,7 +103,7 @@ class ConfigWebApp:
     def save(self, **params):
         try:
             config = load_config(self.config_file)
-            for path, label, field_type in CONFIG_FORM_FIELDS:
+            for path, label_key, field_type in CONFIG_FORM_FIELDS:
                 name = field_name(path)
                 value = self._coerce_value(params.get(name), field_type)
                 set_config_value(config, path, value)
@@ -95,11 +135,12 @@ class ConfigWebApp:
         rows.append('<form method="post" action="/save">')
         rows.append('<fieldset><legend>{}</legend>'.format(
             html.escape(self._text(config, "legend"))))
-        for path, label, field_type in CONFIG_FORM_FIELDS:
+        for path, label_key, field_type in CONFIG_FORM_FIELDS:
             value = get_config_value(config, path)
             name = field_name(path)
             rows.append('<label for="{name}">{label}</label>'.format(
-                name=html.escape(name), label=html.escape(label)))
+                name=html.escape(name),
+                label=html.escape(self._label(config, label_key))))
             if field_type == "bool":
                 checked = " checked" if value else ""
                 rows.append('<input type="checkbox" id="{0}" name="{0}" value="true"{1}>'.format(
@@ -159,6 +200,11 @@ class ConfigWebApp:
     def _text(self, config, key):
         language = self._language(config)
         return TEXT.get(language, TEXT["en"])[key]
+
+    def _label(self, config, key):
+        language = self._language(config)
+        labels = TEXT.get(language, TEXT["en"])["labels"]
+        return labels.get(key, TEXT["en"]["labels"][key])
 
     def _language(self, config):
         language = config.get("ui_lang", "en")

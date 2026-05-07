@@ -150,7 +150,8 @@ class Runner:
             self.h_count = 0
 
             # Default in config.json.sample: pause for 5 minutes on info screen
-            if (self.enabled_weather_screens()
+            enabled_weather_screens = self.enabled_weather_screens()
+            if (enabled_weather_screens
                     and self.non_weather_timeout > (
                         self.config["info_pause"] * TICKS_PER_SECOND)):
                 self.switch_to_default_weather_screen()
@@ -288,9 +289,8 @@ class Runner:
 
     def switch_to_weather_screen(self, screen):
         if screen not in self.enabled_weather_screens():
-            if self.my_weather_rock is not None:
-                self.my_weather_rock.log.warning(
-                    f"Ignoring disabled weather screen: {screen}")
+            self.my_weather_rock.log.warning(
+                f"Ignoring disabled weather screen: {screen}")
             return
 
         self.current_screen = screen
