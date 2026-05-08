@@ -1,4 +1,5 @@
 import importlib
+from pathlib import Path
 import types
 import unittest
 from unittest import mock
@@ -52,6 +53,14 @@ VALID_CONFIG = {
 
 
 class ConfigWebTest(unittest.TestCase):
+    def test_current_and_legacy_entrypoints_use_in_repo_config_ui(self):
+        pyproject = Path(__file__).resolve().parents[1] / "pyproject.toml"
+        text = pyproject.read_text()
+
+        self.assertIn('pwr-config-web = "piweatherrock.pwr_config_web:main"', text)
+        self.assertIn('pwr-webconfig = "piweatherrock.pwr_config_web:main"', text)
+        self.assertNotIn("piweatherrock-webconfig", text)
+
     def test_form_groups_fields_with_help_and_map(self):
         html = ConfigWebApp("config.json")._render_form(VALID_CONFIG)
 

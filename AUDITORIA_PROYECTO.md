@@ -468,7 +468,7 @@ Por compatibilidad, se puede migrar desde `plugins.daily/hourly` a `pages`.
 
 ### Aplicación de configuración
 
-El repositorio ya depende de `piweatherrock-webconfig==1.5.0`, por lo que conviene integrar la configuración de páginas en esa aplicación o evolucionarla.
+El repositorio integra la aplicación de configuración web en `piweatherrock.pwr_config_web`; conviene seguir evolucionándola ahí para exponer nuevas opciones de páginas.
 
 Campos mínimos que debería exponer:
 

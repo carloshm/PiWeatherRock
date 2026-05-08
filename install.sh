@@ -32,3 +32,4 @@ echo "  cp piweatherrock/config.json-sample piweatherrock/piweatherrock-config.j
 echo "  # Edit piweatherrock-config.json with your coordinates, timezone, etc."
 echo ""
 echo "Run with: pwr-ui -c ./piweatherrock/piweatherrock-config.json"
+echo "Configure from a browser with: pwr-config-web -c ./piweatherrock/piweatherrock-config.json"

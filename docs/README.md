@@ -39,6 +39,8 @@ pwr-ui -c ./piweatherrock/piweatherrock-config.json
 ```
 
 También queda disponible `pwr-config-upgrade` para actualizar configuraciones antiguas.
+El comando heredado `pwr-webconfig` apunta a la misma aplicación web que
+`pwr-config-web`.
 
 ## Aplicación web de configuración
 
@@ -54,6 +56,9 @@ PiWeatherRock incluye una aplicación web local para editar el mismo fichero JSO
    ```bash
    pwr-config-web -c ./piweatherrock/piweatherrock-config.json
    ```
+
+   Si tenías scripts antiguos con `pwr-webconfig`, puedes seguir usándolos:
+   ahora arrancan esta misma interfaz mejorada.
 
 3. Abre el navegador en `http://127.0.0.1:8888`.
 4. Cambia los valores necesarios y pulsa **Guardar cambios**.
@@ -108,7 +113,7 @@ En ese caso, limita el acceso a una red de confianza y cierra la aplicación cua
 config.json-sample
         │
         ▼
-piweatherrock-config.json ──► pwr-config-web ──► Guardar / validar
+piweatherrock-config.json ──► pwr-config-web / pwr-webconfig ──► Guardar / validar
         │                              │
         └──────────── pwr-ui detecta cambios válidos ────────────┘
 ```
