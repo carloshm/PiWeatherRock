@@ -1,8 +1,8 @@
 # PiWeatherRock
 
-![GitHub](https://img.shields.io/github/license/carloshm/PiWeatherRock)
+[![License: MIT](https://img.shields.io/github/license/carloshm/PiWeatherRock)](LICENSE)
 
-PiWeatherRock displays local weather on (almost) any screen you connect to a Raspberry Pi. It also works on other platforms, including macOS.
+PiWeatherRock displays local weather on (almost) any screen you connect to a Raspberry Pi. It also works on other platforms, including Windows and macOS.
 
 ## Weather API
 
