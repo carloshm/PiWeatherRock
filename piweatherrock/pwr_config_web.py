@@ -314,8 +314,11 @@ FORM_SECTIONS = [
     ('diagnostics', (('log_level',),)),
 ]
 
+MAP_ZOOM_DELTA = 0.03
+TIMEZONE_OPTIONS = tuple((timezone, timezone) for timezone in SUPPORTED_TIMEZONES)
+
 SELECT_OPTIONS = {
-    ('timezone',): [(timezone, timezone) for timezone in SUPPORTED_TIMEZONES],
+    ('timezone',): TIMEZONE_OPTIONS,
     ('units',): [('si', 'Metric (SI)'), ('us', 'US'), ('ca', 'Canada'),
                  ('uk2', 'UK'), ('auto', 'Auto')],
     ('lang',): [(language, language.upper()) for language in SUPPORTED_LANGUAGES],
@@ -619,7 +622,7 @@ class ConfigWebApp:
       var frame = document.getElementById('location-map');
       var link = document.getElementById('open-map-link');
       function mapUrl(latitude, longitude) {{
-        var delta = 0.03;
+        var delta = {map_delta};
         var left = longitude - delta;
         var right = longitude + delta;
         var top = latitude + delta;
@@ -651,6 +654,7 @@ class ConfigWebApp:
             language=html.escape(language),
             title=html.escape(title),
             subtitle=html.escape(TEXT.get(language, TEXT["en"])["subtitle"]),
+            map_delta=MAP_ZOOM_DELTA,
             body=body)
 
     def _section_title(self, config, key):
@@ -662,7 +666,7 @@ class ConfigWebApp:
         return TEXT.get(language, TEXT["en"])["help"][key]
 
     def _map_url(self, lat, lon):
-        delta = 0.03
+        delta = MAP_ZOOM_DELTA
         bbox = "{},{},{},{}".format(lon - delta, lat - delta, lon + delta, lat + delta)
         return "https://www.openstreetmap.org/export/embed.html?" + urlencode({
             "bbox": bbox,
