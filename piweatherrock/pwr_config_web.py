@@ -330,6 +330,7 @@ FORM_SECTIONS = [
 ]
 
 MAP_ZOOM_DELTA = 0.03
+COORDINATE_PRECISION = 6
 _TIMEZONE_OPTIONS = None
 
 SELECT_OPTIONS = {
@@ -349,6 +350,10 @@ LOCATION_PRESETS = (
     ('Sevilla', 37.389092, -5.984459),
     ('Bilbao', 43.263013, -2.934985),
     ('A Coruña', 43.362344, -8.411540),
+    ('London', 51.507351, -0.127758),
+    ('Paris', 48.856613, 2.352222),
+    ('Lisboa', 38.722252, -9.139337),
+    ('New York', 40.712776, -74.005974),
 )
 
 
@@ -526,8 +531,15 @@ class ConfigWebApp:
         return "\n      ".join(options)
 
     def _same_coordinate_pair(self, first_lat, first_lon, second_lat, second_lon):
-        return round(first_lat, 6) == round(second_lat, 6) and round(
-            first_lon, 6) == round(second_lon, 6)
+        first = (
+            round(first_lat, COORDINATE_PRECISION),
+            round(first_lon, COORDINATE_PRECISION),
+        )
+        second = (
+            round(second_lat, COORDINATE_PRECISION),
+            round(second_lon, COORDINATE_PRECISION),
+        )
+        return first == second
 
     def _page(self, title, body, language="en"):
         return """<!doctype html>
@@ -872,7 +884,11 @@ class ConfigWebApp:
     def _text(self, config, key):
         language = self._language(config)
         language_text = TEXT.get(language, TEXT["en"])
-        return language_text.get(key, TEXT["en"][key])
+        if key in language_text:
+            return language_text[key]
+        if key in TEXT["en"]:
+            return TEXT["en"][key]
+        raise KeyError("Missing web configuration text for '{}'".format(key))
 
     def _label(self, config, key):
         language = self._language(config)
