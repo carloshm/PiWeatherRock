@@ -117,6 +117,17 @@ video playback requires `ffmpeg` to be installed and available on `PATH`. Local
 media paths may use `~` or environment variables, but the expanded folder must
 exist before enabling the media page.
 
+If your shell reports `pwr-config-web: command not found`, the PiWeatherRock
+package is not installed in the currently active virtual environment. From the
+repository root, activate the environment and reinstall the package:
+
+```bash
+source ~/pwr-env/bin/activate
+python3 -m pip install .
+```
+
+Then verify that `pwr-config-web` is on `PATH` with `command -v pwr-config-web`.
+
 See [`docs/`](docs/) for an application walkthrough with screenshots.
 
 ## Release process
