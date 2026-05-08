@@ -888,7 +888,7 @@ class ConfigWebApp:
             return language_text[key]
         if key in TEXT["en"]:
             return TEXT["en"][key]
-        raise KeyError("Missing web configuration text for '{}'".format(key))
+        raise KeyError("Missing web configuration text for key: {}".format(key))
 
     def _label(self, config, key):
         language = self._language(config)
