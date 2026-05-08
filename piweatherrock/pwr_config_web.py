@@ -386,7 +386,7 @@ class ConfigWebApp:
             rows.append('<h2 id="{id}-title">{title}</h2>'.format(
                 id=html.escape(section_key),
                 title=html.escape(self._section_title(config, section_key))))
-            rows.append('<span class="help-icon" tabindex="0" role="img" '
+            rows.append('<span class="help-icon" tabindex="0" role="button" '
                         'aria-label="{help}" title="{help}">?</span>'.format(
                             help=html.escape(
                                 self._section_help(config, section_key),
