@@ -53,12 +53,12 @@ VALID_CONFIG = {
 
 
 class ConfigWebTest(unittest.TestCase):
-    def test_current_and_legacy_entrypoints_use_in_repo_config_ui(self):
+    def test_current_entrypoint_in_pyproject(self):
         pyproject = Path(__file__).resolve().parents[1] / "pyproject.toml"
         text = pyproject.read_text()
 
         self.assertIn('pwr-config-web = "piweatherrock.pwr_config_web:main"', text)
-        self.assertIn('pwr-webconfig = "piweatherrock.pwr_config_web:main"', text)
+        self.assertNotIn("pwr-webconfig", text)
         self.assertNotIn("piweatherrock-webconfig", text)
 
     def test_form_groups_fields_with_help_and_map(self):
@@ -86,6 +86,21 @@ class ConfigWebTest(unittest.TestCase):
         self.assertIn('Pausa entre archivos de medios locales', html)
         self.assertIn('Pause between full page cycles', english_html)
         self.assertIn('Pause between local media items', english_html)
+
+    def test_page_includes_theme_toggle(self):
+        html = ConfigWebApp("config.json")._render_form(VALID_CONFIG)
+
+        self.assertIn('id="theme-toggle"', html)
+        self.assertIn('data-theme', html)
+        self.assertIn('localStorage', html)
+
+    def test_media_section_rendered(self):
+        html = ConfigWebApp("config.json")._render_form(VALID_CONFIG)
+
+        self.assertIn('aria-labelledby="media-title"', html)
+        self.assertIn('plugins__media__enabled', html)
+        self.assertIn('plugins__media__path', html)
+        self.assertIn('plugins__media__fit', html)
 
 
 if __name__ == "__main__":

@@ -39,8 +39,6 @@ pwr-ui -c ./piweatherrock/piweatherrock-config.json
 ```
 
 También queda disponible `pwr-config-upgrade` para actualizar configuraciones antiguas.
-El comando heredado `pwr-webconfig` apunta a la misma aplicación web que
-`pwr-config-web`.
 
 ## Aplicación web de configuración
 
@@ -57,8 +55,9 @@ PiWeatherRock incluye una aplicación web local para editar el mismo fichero JSO
    pwr-config-web -c ./piweatherrock/piweatherrock-config.json
    ```
 
-   Si tenías scripts antiguos con `pwr-webconfig`, puedes seguir usándolos:
-   ahora arrancan esta misma interfaz mejorada.
+   Si tenías scripts antiguos con `pwr-webconfig`, puedes sustituirlos por
+   `pwr-config-web`, que es ahora el único punto de entrada para la
+   configuración web.
 
 3. Abre el navegador en `http://127.0.0.1:8888`.
 4. Cambia los valores necesarios y pulsa **Guardar cambios**.
@@ -113,7 +112,7 @@ En ese caso, limita el acceso a una red de confianza y cierra la aplicación cua
 config.json-sample
         │
         ▼
-piweatherrock-config.json ──► pwr-config-web / pwr-webconfig ──► Guardar / validar
+piweatherrock-config.json ──► pwr-config-web ──► Guardar / validar
         │                              │
         └──────────── pwr-ui detecta cambios válidos ────────────┘
 ```
@@ -171,4 +170,4 @@ Los valores se editan en `piweatherrock/piweatherrock-config.json`:
 - `plugins.media.fit`: modo de ajuste (`contain`, `cover` o `stretch`).
 - `plugins.media.extensions`: extensiones permitidas separadas por comas.
 
-La aplicación web `pwr-config-web` permite editar qué pantallas se visualizan y el tiempo de visualización de cada una. La configuración se recarga automáticamente en la UI principal cuando el JSON actualizado es válido.
+La aplicación web `pwr-config-web` permite editar qué pantallas se visualizan y el tiempo de visualización de cada una. La interfaz soporta tema claro y oscuro, con un botón de alternancia y detección automática de la preferencia del sistema. La configuración se recarga automáticamente en la UI principal cuando el JSON actualizado es válido.
