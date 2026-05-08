@@ -114,6 +114,12 @@ class ConfigManagerTest(unittest.TestCase):
         with self.assertRaises(ConfigError):
             validate_config(config)
 
+    def test_validate_config_rejects_unknown_timezone(self):
+        config = json.loads(json.dumps(VALID_CONFIG))
+        config["timezone"] = "Europe/Unknown"
+        with self.assertRaises(ConfigError):
+            validate_config(config)
+
     def test_config_watcher_detects_file_replacement(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             path = os.path.join(tmpdir, "config.json")

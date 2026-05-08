@@ -8,6 +8,8 @@ import shutil
 import tempfile
 import time
 
+from pytz import common_timezones
+
 
 class ConfigError(Exception):
     """Raised when a configuration file cannot be loaded or validated."""
@@ -64,6 +66,7 @@ MEDIA_VIDEO_EXTENSIONS = ("mp4", "mov", "m4v", "avi", "webm")
 MEDIA_FIT_MODES = ("contain", "cover", "stretch")
 
 SUPPORTED_LANGUAGES = ("en", "es", "ca", "gl", "eu")
+SUPPORTED_TIMEZONES = tuple(common_timezones)
 
 WEATHER_RELOAD_PATHS = {
     ("ds_api_key",),
@@ -176,6 +179,7 @@ def validate_config(config):
     _validate_positive_int(config, "info_delay", errors)
     _validate_language(config, "lang", errors)
     _validate_language(config, "ui_lang", errors)
+    _validate_timezone(config, errors)
 
     if isinstance(plugins, dict):
         enabled_count = 0
@@ -341,6 +345,12 @@ def _validate_language(config, key, errors):
     if isinstance(value, str) and value not in SUPPORTED_LANGUAGES:
         errors.append("Field '{}' must be one of: {}".format(
             key, ", ".join(SUPPORTED_LANGUAGES)))
+
+
+def _validate_timezone(config, errors):
+    value = config.get("timezone")
+    if isinstance(value, str) and value not in SUPPORTED_TIMEZONES:
+        errors.append("Field 'timezone' must be a valid timezone")
 
 
 def _validate_media_plugin(plugin_config, errors):
