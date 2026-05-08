@@ -22,7 +22,13 @@ Weather settings are configured in `piweatherrock/piweatherrock-config.json`:
 - `timezone`: Your timezone (e.g., `Europe/Madrid`).
 - `update_freq`: How often to refresh weather data (in seconds).
 - `fullscreen`, `12hour_disp`, `icon_offset`: Display behavior.
-- `info_pause`, `info_delay`, `plugins`: Page rotation behavior.
+- `info_pause`, `info_delay`, `plugins`: Page rotation behavior. `plugins`
+  controls which screens are shown (`daily`, `hourly`, `info`, `media`) and
+  each screen's display time.
+- `plugins.media`: Local media screen settings for images and short videos
+  loaded from a folder. Configure `enabled`, `pause`, `path`, `shuffle`, `fit`
+  (`contain`, `cover`, or `stretch`), and allowed `extensions`.
+  The folder in `path` must already exist before enabling this screen.
 
 PiWeatherRock automatically checks the config file while `pwr-ui` is running.
 Valid changes are applied without restarting the display. If the JSON is invalid,
@@ -36,6 +42,8 @@ pwr-config-web -c ./piweatherrock/piweatherrock-config.json
 
 The config UI binds to `127.0.0.1:8888` by default. Use `--host` and `--port`
 only when you intentionally want to expose it elsewhere on your network.
+The same UI exposes the screen selection, display time, and local media folder
+settings.
 See the expanded visual guide in [`docs/README.md`](docs/README.md#aplicaci%C3%B3n-web-de-configuraci%C3%B3n).
 
 ## Installation

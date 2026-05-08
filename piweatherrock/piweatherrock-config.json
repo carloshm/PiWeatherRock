@@ -20,6 +20,18 @@
     "hourly": {
       "pause": 60,
       "enabled": false
+    },
+    "info": {
+      "pause": 300,
+      "enabled": true
+    },
+    "media": {
+      "pause": 20,
+      "enabled": false,
+      "path": "/home/pi/Pictures",
+      "shuffle": false,
+      "fit": "contain",
+      "extensions": "jpg,jpeg,png,gif,bmp,mp4,mov,m4v,avi,webm"
     }
   },
   "log_level": "INFO"

@@ -22,6 +22,18 @@
         "hourly": {
             "enabled": true,
             "pause": 60
+        },
+        "info": {
+            "enabled": true,
+            "pause": 300
+        },
+        "media": {
+            "enabled": false,
+            "pause": 20,
+            "path": "/home/pi/Pictures",
+            "shuffle": false,
+            "fit": "contain",
+            "extensions": "jpg,jpeg,png,gif,bmp,mp4,mov,m4v,avi,webm"
         }
     }
 }

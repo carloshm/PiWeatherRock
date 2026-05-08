@@ -36,6 +36,33 @@ PLUGIN_FIELDS = {
     "pause": int,
 }
 
+DEFAULT_PLUGINS = {
+    "daily": {
+        "enabled": True,
+        "pause": 60,
+    },
+    "hourly": {
+        "enabled": True,
+        "pause": 60,
+    },
+    "info": {
+        "enabled": True,
+        "pause": 300,
+    },
+    "media": {
+        "enabled": False,
+        "pause": 20,
+        "path": "",
+        "shuffle": False,
+        "fit": "contain",
+        "extensions": "jpg,jpeg,png,gif,bmp,mp4,mov,m4v,avi,webm",
+    },
+}
+
+MEDIA_IMAGE_EXTENSIONS = ("jpg", "jpeg", "png", "gif", "bmp")
+MEDIA_VIDEO_EXTENSIONS = ("mp4", "mov", "m4v", "avi", "webm")
+MEDIA_FIT_MODES = ("contain", "cover", "stretch")
+
 SUPPORTED_LANGUAGES = ("en", "es", "ca", "gl", "eu")
 
 WEATHER_RELOAD_PATHS = {
@@ -64,10 +91,7 @@ LOG_RELOAD_PATHS = {
 ROTATION_RELOAD_PATHS = {
     ("info_pause",),
     ("info_delay",),
-    ("plugins", "daily", "pause"),
-    ("plugins", "hourly", "pause"),
-    ("plugins", "daily", "enabled"),
-    ("plugins", "hourly", "enabled"),
+    ("plugins",),
 }
 
 
@@ -89,6 +113,14 @@ CONFIG_FORM_FIELDS = [
     (("plugins", "daily", "pause"), "daily_pause", "int"),
     (("plugins", "hourly", "enabled"), "hourly_enabled", "bool"),
     (("plugins", "hourly", "pause"), "hourly_pause", "int"),
+    (("plugins", "info", "enabled"), "info_enabled", "bool"),
+    (("plugins", "info", "pause"), "info_pause_plugin", "int"),
+    (("plugins", "media", "enabled"), "media_enabled", "bool"),
+    (("plugins", "media", "pause"), "media_pause", "int"),
+    (("plugins", "media", "path"), "media_path", "text"),
+    (("plugins", "media", "shuffle"), "media_shuffle", "bool"),
+    (("plugins", "media", "fit"), "media_fit", "text"),
+    (("plugins", "media", "extensions"), "media_extensions", "text"),
     (("log_level",), "log_level", "text"),
 ]
 
@@ -102,8 +134,9 @@ def load_config(config_file):
         raise ConfigError("Could not load config file '{}': {}".format(
             config_file, exc))
 
-    validate_config(config)
-    return config
+    normalized = normalize_config(config)
+    validate_config(normalized)
+    return normalized
 
 
 def validate_config(config):
@@ -121,8 +154,9 @@ def validate_config(config):
 
     plugins = config.get("plugins")
     if isinstance(plugins, dict):
-        for plugin_name in ("daily", "hourly"):
-            plugin_config = plugins.get(plugin_name)
+        normalized_plugins = merge_defaults(plugins, DEFAULT_PLUGINS)
+        for plugin_name in DEFAULT_PLUGINS:
+            plugin_config = normalized_plugins.get(plugin_name)
             if not isinstance(plugin_config, dict):
                 errors.append("Missing plugin '{}' configuration".format(plugin_name))
                 continue
@@ -132,6 +166,8 @@ def validate_config(config):
                 elif not _is_expected_type(plugin_config[key], expected_type):
                     errors.append("Field plugins.{}.{} has invalid type".format(
                         plugin_name, key))
+            if plugin_name == "media":
+                _validate_media_plugin(plugin_config, errors)
 
     _validate_range(config, "lat", -90, 90, errors)
     _validate_range(config, "lon", -180, 180, errors)
@@ -142,16 +178,30 @@ def validate_config(config):
     _validate_language(config, "ui_lang", errors)
 
     if isinstance(plugins, dict):
-        for plugin_name in ("daily", "hourly"):
-            plugin_config = plugins.get(plugin_name)
+        enabled_count = 0
+        normalized_plugins = merge_defaults(plugins, DEFAULT_PLUGINS)
+        for plugin_name in DEFAULT_PLUGINS:
+            plugin_config = normalized_plugins.get(plugin_name)
             if isinstance(plugin_config, dict):
                 _validate_positive_int(plugin_config, "pause", errors,
                                        "plugins.{}.pause".format(plugin_name))
+                if plugin_config.get("enabled") is True:
+                    enabled_count += 1
+        if enabled_count == 0:
+            errors.append("At least one plugin must be enabled")
 
     if errors:
         raise ConfigError("Invalid configuration: " + "; ".join(errors))
 
     return True
+
+
+def normalize_config(config):
+    """Return a copy of config with current plugin defaults filled in."""
+    normalized = copy.deepcopy(config)
+    normalized["plugins"] = merge_defaults(
+        normalized.get("plugins", {}), DEFAULT_PLUGINS)
+    return normalized
 
 
 def merge_defaults(config, default_config):
@@ -167,6 +217,7 @@ def merge_defaults(config, default_config):
 
 def write_config_atomic(config_file, config, backup=True):
     """Validate and write config atomically, preserving the previous file."""
+    config = normalize_config(config)
     validate_config(config)
 
     config_dir = os.path.dirname(os.path.abspath(config_file)) or "."
@@ -290,6 +341,39 @@ def _validate_language(config, key, errors):
     if isinstance(value, str) and value not in SUPPORTED_LANGUAGES:
         errors.append("Field '{}' must be one of: {}".format(
             key, ", ".join(SUPPORTED_LANGUAGES)))
+
+
+def _validate_media_plugin(plugin_config, errors):
+    if not isinstance(plugin_config.get("path"), str):
+        errors.append("Field plugins.media.path has invalid type")
+    elif plugin_config.get("enabled") and not plugin_config["path"]:
+        errors.append("Field plugins.media.path is required when media is enabled")
+    elif plugin_config.get("enabled") and not os.path.isdir(plugin_config["path"]):
+        errors.append("Field plugins.media.path must be an existing directory")
+    if not isinstance(plugin_config.get("shuffle"), bool):
+        errors.append("Field plugins.media.shuffle has invalid type")
+    if not isinstance(plugin_config.get("fit"), str):
+        errors.append("Field plugins.media.fit has invalid type")
+    elif plugin_config["fit"] not in MEDIA_FIT_MODES:
+        errors.append("Field plugins.media.fit must be one of: {}".format(
+            ", ".join(MEDIA_FIT_MODES)))
+    if not isinstance(plugin_config.get("extensions"), str):
+        errors.append("Field plugins.media.extensions has invalid type")
+        return
+    configured = plugin_config["extensions"]
+    allowed = set(MEDIA_IMAGE_EXTENSIONS + MEDIA_VIDEO_EXTENSIONS)
+    for extension in _split_extensions(configured):
+        if extension not in allowed:
+            errors.append("Unsupported media extension '{}'".format(extension))
+
+
+def _split_extensions(value):
+    extensions = []
+    for part in value.split(","):
+        extension = part.strip().lower().lstrip(".")
+        if extension:
+            extensions.append(extension)
+    return extensions
 
 
 def _collect_diff(path, old_value, new_value, changed):

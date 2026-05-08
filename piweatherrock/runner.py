@@ -11,7 +11,7 @@ import time
 # that being the case, I decided to have the lint error here instead of
 # every place they get used. PR's welcome to make pylint happy about this
 # and pygame.quit()
-from pygame.locals import QUIT, VIDEORESIZE, KEYDOWN, K_KP_ENTER, K_q, K_d, K_h, K_i, K_s
+from pygame.locals import QUIT, VIDEORESIZE, KEYDOWN, K_KP_ENTER, K_q, K_d, K_h, K_i, K_m, K_s
 
 # local imports
 from piweatherrock.config_manager import (
@@ -26,12 +26,21 @@ from piweatherrock.weather import Weather
 from piweatherrock.plugin_weather_daily import PluginWeatherDaily
 from piweatherrock.plugin_weather_hourly import PluginWeatherHourly
 from piweatherrock.plugin_info import PluginInfo
+from piweatherrock.plugin_media import PluginMedia
 
 
 UI_LOOP_FREQUENCY = 10
 
 
 class Runner:
+    # Keyboard shortcuts and rotation state use short screen IDs; config stores
+    # the matching plugin names under the "plugins" object.
+    SCREEN_TO_PLUGIN_NAME = {
+        'd': "daily",
+        'h': "hourly",
+        'i': "info",
+        'm': "media",
+    }
 
     def __init__(self):
         self.current_screen = None
@@ -46,7 +55,9 @@ class Runner:
         self.daily = None
         self.hourly = None
         self.info = None
+        self.media = None
         self.config_watcher = None
+        self.page_tick_count = 0
 
     def main(self, config_file):
         self.config = load_config(config_file)
@@ -60,6 +71,7 @@ class Runner:
         self.daily = PluginWeatherDaily(self.my_weather_rock)
         self.hourly = PluginWeatherHourly(self.my_weather_rock)
         self.info = PluginInfo(self.my_weather_rock)
+        self.media = PluginMedia(self.my_weather_rock)
 
         # Default to weather mode. Showing daily weather first.
         self.switch_to_default_weather_screen()
@@ -125,11 +137,11 @@ class Runner:
 
                 # On 'i' key, set mode to 'info'.
                 elif event.key == K_i:
-                    self.current_screen = 'i'
-                    self.d_count = 0
-                    self.h_count = 0
-                    self.non_weather_timeout = 0
-                    self.periodic_info_activation = 0
+                    self.switch_to_screen('i')
+
+                # On 'm' key, set mode to local media.
+                elif event.key == K_m:
+                    self.switch_to_screen('m')
 
                 # On 's' key, save a screen shot.
                 elif event.key == K_s:
@@ -141,36 +153,10 @@ class Runner:
         on a regular basis.
         """
         self.ensure_current_screen_enabled()
-
-        # Automatically switch back to weather display after a couple minutes
-        if self.current_screen not in ('d', 'h'):
-            self.periodic_info_activation = 0
-            self.non_weather_timeout += 1
-            self.d_count = 0
-            self.h_count = 0
-
-            # Default in config.json.sample: pause for 5 minutes on info screen
-            enabled_weather_screens = self.enabled_weather_screens()
-            if (enabled_weather_screens
-                    and self.non_weather_timeout > (
-                        self.config["info_pause"] * UI_LOOP_FREQUENCY)):
-                self.switch_to_default_weather_screen()
-                self.my_weather_rock.log.info("Switching to weather mode")
-        else:
-            self.non_weather_timeout = 0
-            self.periodic_info_activation += 1
-
-            # Default is to flip between 2 weather screens
-            # for 15 minutes before showing info screen.
-            if self.periodic_info_activation > (
-                    self.config["info_delay"] * UI_LOOP_FREQUENCY):
-                self.current_screen = 'i'
-                self.my_weather_rock.log.info("Switching to info mode")
-            elif (self.periodic_info_activation % (
-                    ((self.config["plugins"]["daily"]["pause"] * self.d_count)
-                        + (self.config["plugins"]["hourly"]["pause"] * self.h_count))
-                    * UI_LOOP_FREQUENCY)) == 0:
-                self.switch_to_next_weather_screen()
+        self.page_tick_count += 1
+        pause = self.screen_pause(self.current_screen)
+        if pause and self.page_tick_count > pause * UI_LOOP_FREQUENCY:
+            self.switch_to_next_screen()
 
         # Daily Weather Display Mode
         if self.current_screen == 'd':
@@ -219,6 +205,15 @@ class Runner:
                 except Exception:
                     self.my_weather_rock.log.exception(
                         "Error rendering info screen")
+
+        # Local media display mode
+        elif self.current_screen == 'm':
+            try:
+                self.media.disp_media(self.my_weather_rock)
+            except Exception:
+                self.my_weather_rock.log.exception(
+                    "Error rendering media screen")
+                self.switch_to_next_screen()
 
     def check_forecast(self):
         try:
@@ -274,19 +269,30 @@ class Runner:
             enabled.append('h')
         return enabled
 
+    def enabled_screens(self):
+        enabled = []
+        if self.config["plugins"]["daily"].get("enabled", True):
+            enabled.append('d')
+        if self.config["plugins"]["hourly"].get("enabled", True):
+            enabled.append('h')
+        if self.config["plugins"]["info"].get("enabled", True):
+            enabled.append('i')
+        if self.config["plugins"]["media"].get("enabled", False):
+            enabled.append('m')
+        return enabled
+
     def ensure_current_screen_enabled(self):
-        if self.current_screen in ('d', 'h'):
-            if self.current_screen not in self.enabled_weather_screens():
-                self.switch_to_default_weather_screen()
+        if self.current_screen not in self.enabled_screens():
+            self.switch_to_default_weather_screen()
 
     def switch_to_default_weather_screen(self):
-        enabled = self.enabled_weather_screens()
+        enabled = self.enabled_screens()
         if not enabled:
             self.current_screen = 'i'
             self.d_count = 0
             self.h_count = 0
         else:
-            self.switch_to_weather_screen(enabled[0])
+            self.switch_to_screen(enabled[0])
 
     def switch_to_weather_screen(self, screen):
         if screen not in self.enabled_weather_screens():
@@ -294,18 +300,32 @@ class Runner:
                 f"Ignoring disabled weather screen: {screen}")
             return
 
+        self.switch_to_screen(screen)
+
+    def switch_to_screen(self, screen):
+        if screen not in self.enabled_screens():
+            self.my_weather_rock.log.warning(
+                f"Ignoring disabled screen: {screen}")
+            return
+
+        previous_plugin = self.plugin_for_screen(self.current_screen)
+        if previous_plugin and hasattr(previous_plugin, "on_exit"):
+            previous_plugin.on_exit()
+
         self.current_screen = screen
         self.d_count = 1 if screen == 'd' else 0
         self.h_count = 1 if screen == 'h' else 0
         self.non_weather_timeout = 0
         self.periodic_info_activation = 0
+        self.page_tick_count = 0
+        plugin = self.plugin_for_screen(screen)
+        if plugin and hasattr(plugin, "on_enter"):
+            plugin.on_enter(self.my_weather_rock)
 
     def switch_to_next_weather_screen(self):
         enabled = self.enabled_weather_screens()
         if not enabled:
-            self.current_screen = 'i'
-            self.d_count = 0
-            self.h_count = 0
+            self.switch_to_next_screen()
             return
 
         if self.current_screen == 'd' and 'h' in enabled:
@@ -317,10 +337,32 @@ class Runner:
         else:
             self.advance_weather_screen('h', "Staying on HOURLY")
 
+    def switch_to_next_screen(self):
+        enabled = self.enabled_screens()
+        if not enabled:
+            return
+        if self.current_screen not in enabled:
+            self.switch_to_screen(enabled[0])
+            return
+        current_index = enabled.index(self.current_screen)
+        self.switch_to_screen(enabled[(current_index + 1) % len(enabled)])
+
     def advance_weather_screen(self, screen, message):
         self.my_weather_rock.log.info(message)
-        self.current_screen = screen
+        self.switch_to_screen(screen)
         if screen == 'd':
             self.d_count += 1
         else:
             self.h_count += 1
+
+    def screen_pause(self, screen):
+        plugin_name = self.SCREEN_TO_PLUGIN_NAME.get(screen)
+        if not plugin_name:
+            return None
+        return self.config["plugins"][plugin_name].get("pause", 60)
+
+    def plugin_for_screen(self, screen):
+        plugin_name = self.SCREEN_TO_PLUGIN_NAME.get(screen)
+        if not plugin_name:
+            return None
+        return getattr(self, plugin_name)
