@@ -47,7 +47,7 @@ class ConfigWebTest(unittest.TestCase):
         html = ConfigWebApp("config.json")._render_form(VALID_CONFIG)
 
         self.assertIn('<section class="card" aria-labelledby="location-title">', html)
-        self.assertIn('title="Coordenadas y zona horaria', html)
+        self.assertIn('class="help-icon" tabindex="0" role="button"', html)
         self.assertIn('id="location-map"', html)
         self.assertIn('openstreetmap.org/export/embed.html', html)
 
