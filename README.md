@@ -66,6 +66,7 @@ Use the installation script from the repository root:
 ```bash
 git clone https://github.com/carloshm/PiWeatherRock.git
 cd PiWeatherRock
+chmod +x install.sh
 ./install.sh Europe/Madrid
 ```
 
