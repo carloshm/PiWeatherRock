@@ -344,6 +344,7 @@ SELECT_OPTIONS = {
 }
 
 LOCATION_PRESETS = (
+    # Common launch locations for supported languages plus a few global examples.
     ('Madrid', 40.416775, -3.703790),
     ('Barcelona', 41.387397, 2.168568),
     ('Valencia', 39.469907, -0.376288),
@@ -883,7 +884,7 @@ class ConfigWebApp:
 
     def _text(self, config, key):
         language = self._language(config)
-        language_text = TEXT.get(language, TEXT["en"])
+        language_text = TEXT[language] if language in TEXT else {}
         if key in language_text:
             return language_text[key]
         if key in TEXT["en"]:
@@ -904,6 +905,7 @@ class ConfigWebApp:
         return language
 
     def _set_no_store_headers(self):
+        """Force fresh HTML so local users do not keep the old plain form cached."""
         response = getattr(cherrypy, "response", None)
         if response is not None:
             response.headers["Cache-Control"] = "no-store, max-age=0"

@@ -66,7 +66,9 @@ class ConfigWebTest(unittest.TestCase):
 
         self.assertIn('<section class="card" aria-labelledby="location-title">', html)
         self.assertIn('class="help-icon" tabindex="0" role="button"', html)
+        self.assertIn('<header class="hero">', html)
         self.assertIn('id="location-map"', html)
+        self.assertIn('id="location-preset"', html)
         self.assertIn('openstreetmap.org/export/embed.html', html)
         self.assertNotIn("<fieldset", html)
         self.assertNotIn("<legend", html)
