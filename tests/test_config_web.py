@@ -1,14 +1,23 @@
-import sys
+import importlib
 import types
 import unittest
+from unittest import mock
 
 
-if "cherrypy" not in sys.modules:
-    cherrypy = types.ModuleType("cherrypy")
-    cherrypy.expose = lambda function: function
-    sys.modules["cherrypy"] = cherrypy
+def _config_web_app_class():
+    try:
+        import cherrypy  # noqa: F401
+    except ImportError:
+        cherrypy = types.ModuleType("cherrypy")
+        cherrypy.expose = lambda function: function
+        with mock.patch.dict("sys.modules", {"cherrypy": cherrypy}):
+            module = importlib.import_module("piweatherrock.pwr_config_web")
+    else:
+        module = importlib.import_module("piweatherrock.pwr_config_web")
+    return module.ConfigWebApp
 
-from piweatherrock.pwr_config_web import ConfigWebApp
+
+ConfigWebApp = _config_web_app_class()
 
 
 VALID_CONFIG = {

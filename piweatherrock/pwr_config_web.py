@@ -28,6 +28,7 @@ TEXT = {
     'en': {
         'changes_applied': 'Changes applied',
         'config_error': 'Configuration error',
+        'current_value_fallback': '{} (current value)',
         'error': 'Error',
         'legend': 'PiWeatherRock configuration',
         'open_map': 'Open larger map',
@@ -82,6 +83,7 @@ TEXT = {
     'es': {
         'changes_applied': 'Cambios aplicados',
         'config_error': 'Error de configuración',
+        'current_value_fallback': '{} (valor actual)',
         'error': 'Error',
         'legend': 'Configuración PiWeatherRock',
         'open_map': 'Abrir mapa grande',
@@ -136,6 +138,7 @@ TEXT = {
     'ca': {
         'changes_applied': 'Canvis aplicats',
         'config_error': 'Error de configuració',
+        'current_value_fallback': '{} (valor actual)',
         'error': 'Error',
         'legend': 'Configuració de PiWeatherRock',
         'open_map': 'Obre el mapa gran',
@@ -190,6 +193,7 @@ TEXT = {
     'gl': {
         'changes_applied': 'Cambios aplicados',
         'config_error': 'Erro de configuración',
+        'current_value_fallback': '{} (valor actual)',
         'error': 'Erro',
         'legend': 'Configuración de PiWeatherRock',
         'open_map': 'Abrir mapa grande',
@@ -244,6 +248,7 @@ TEXT = {
     'eu': {
         'changes_applied': 'Aldaketak aplikatu dira',
         'config_error': 'Konfigurazio-errorea',
+        'current_value_fallback': '{} (uneko balioa)',
         'error': 'Errorea',
         'legend': 'PiWeatherRock konfigurazioa',
         'open_map': 'Ireki mapa handia',
@@ -315,10 +320,9 @@ FORM_SECTIONS = [
 ]
 
 MAP_ZOOM_DELTA = 0.03
-TIMEZONE_OPTIONS = tuple((timezone, timezone) for timezone in SUPPORTED_TIMEZONES)
+_TIMEZONE_OPTIONS = None
 
 SELECT_OPTIONS = {
-    ('timezone',): TIMEZONE_OPTIONS,
     ('units',): [('si', 'Metric (SI)'), ('us', 'US'), ('ca', 'Canada'),
                  ('uk2', 'UK'), ('auto', 'Auto')],
     ('lang',): [(language, language.upper()) for language in SUPPORTED_LANGUAGES],
@@ -425,7 +429,9 @@ class ConfigWebApp:
                            name=escaped_name, checked=checked, label=label)
             return '<div class="field field-checkbox">{}</div>'.format(control)
         if path in SELECT_OPTIONS:
-            control = self._render_select(path, value)
+            control = self._render_select(config, path, value)
+        elif path == ('timezone',):
+            control = self._render_select(config, path, value)
         else:
             input_type = "number" if field_type in ("int", "float") else "text"
             step = ' step="any"' if field_type == "float" else ""
@@ -439,12 +445,13 @@ class ConfigWebApp:
                 '{control}</div>').format(
                     name=escaped_name, label=label, control=control)
 
-    def _render_select(self, path, value):
+    def _render_select(self, config, path, value):
         name = field_name(path)
-        options = list(SELECT_OPTIONS[path])
+        options = list(self._select_options(path))
         option_values = [option_value for option_value, _ in options]
         if value not in option_values:
-            options.insert(0, (value, "{} (current value)".format(value)))
+            options.insert(0, (value, self._text(
+                config, "current_value_fallback").format(value)))
         option_html = []
         for option_value, option_label in options:
             selected = " selected" if option_value == value else ""
@@ -690,6 +697,18 @@ class ConfigWebApp:
             if field_path == path:
                 return label_key, field_type
         raise KeyError(path)
+
+    def _select_options(self, path):
+        if path == ('timezone',):
+            return self._timezone_options()
+        return SELECT_OPTIONS[path]
+
+    def _timezone_options(self):
+        global _TIMEZONE_OPTIONS
+        if _TIMEZONE_OPTIONS is None:
+            _TIMEZONE_OPTIONS = tuple(
+                (timezone, timezone) for timezone in SUPPORTED_TIMEZONES)
+        return _TIMEZONE_OPTIONS
 
     def _text(self, config, key):
         language = self._language(config)
