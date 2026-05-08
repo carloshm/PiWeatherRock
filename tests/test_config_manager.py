@@ -57,6 +57,56 @@ class ConfigManagerTest(unittest.TestCase):
         finally:
             os.remove(path)
 
+    def test_load_config_reads_utf8_paths(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            media_dir = os.path.join(tmpdir, "Imágenes")
+            os.mkdir(media_dir)
+            path = os.path.join(tmpdir, "config.json")
+            config = dict(VALID_CONFIG)
+            config["plugins"] = dict(VALID_CONFIG["plugins"])
+            config["plugins"]["media"] = dict(VALID_CONFIG["plugins"]["media"])
+            config["plugins"]["media"]["enabled"] = True
+            config["plugins"]["media"]["path"] = media_dir
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(config, f)
+
+            loaded = load_config(path)
+
+            self.assertEqual(loaded["plugins"]["media"]["path"], media_dir)
+
+    def test_sample_config_defaults_to_getafe(self):
+        sample_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "piweatherrock",
+            "config.json-sample")
+        config = load_config(sample_path)
+
+        self.assertEqual(config["timezone"], "Europe/Madrid")
+        self.assertAlmostEqual(config["lat"], 40.30825)
+        self.assertAlmostEqual(config["lon"], -3.732393)
+        self.assertEqual(config["plugins"]["media"]["fit"], "cover")
+
+    def test_media_path_validation_expands_environment_variables(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            old_value = os.environ.get("PWR_TEST_MEDIA_DIR")
+            os.environ["PWR_TEST_MEDIA_DIR"] = tmpdir
+            try:
+                config = dict(VALID_CONFIG)
+                config["plugins"] = dict(VALID_CONFIG["plugins"])
+                config["plugins"]["media"] = dict(
+                    VALID_CONFIG["plugins"]["media"])
+                config["plugins"]["media"]["enabled"] = True
+                config["plugins"]["media"]["path"] = (
+                    "%PWR_TEST_MEDIA_DIR%"
+                    if os.name == "nt" else "$PWR_TEST_MEDIA_DIR")
+
+                self.assertTrue(validate_config(config))
+            finally:
+                if old_value is None:
+                    os.environ.pop("PWR_TEST_MEDIA_DIR", None)
+                else:
+                    os.environ["PWR_TEST_MEDIA_DIR"] = old_value
+
     def test_write_config_atomic_creates_backup_and_valid_file(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             path = os.path.join(tmpdir, "config.json")

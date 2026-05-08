@@ -1,12 +1,12 @@
 {
     "version": "3.0.0",
     "ds_api_key": "openmeteo-request-piweatherrock",
-    "lat": 0.112358,
-    "lon": 0.246810,
+    "lat": 40.30825,
+    "lon": -3.732393,
     "units": "si",
     "lang": "en",
     "ui_lang": "en",
-    "timezone": "Europe/London",
+    "timezone": "Europe/Madrid",
     "fullscreen": true,
     "icon_offset": -23.5,
     "update_freq": 300,
@@ -32,7 +32,7 @@
             "pause": 20,
             "path": "/home/pi/Pictures",
             "shuffle": false,
-            "fit": "contain",
+            "fit": "cover",
             "extensions": "jpg,jpeg,png,gif,bmp,mp4,mov,m4v,avi,webm"
         }
     }

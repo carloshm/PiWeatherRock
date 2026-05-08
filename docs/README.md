@@ -27,7 +27,7 @@ cp piweatherrock/config.json-sample piweatherrock/piweatherrock-config.json
 pwr-ui -c ./piweatherrock/piweatherrock-config.json
 ```
 
-Para una instalación manual o de desarrollo:
+Para una instalación manual o de desarrollo en macOS/Linux:
 
 ```bash
 python3 -m venv .venv
@@ -37,6 +37,22 @@ python3 -m pip install .
 cp piweatherrock/config.json-sample piweatherrock/piweatherrock-config.json
 pwr-ui -c ./piweatherrock/piweatherrock-config.json
 ```
+
+En Windows, usa PowerShell desde la raíz del repositorio:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+py -m pip install --upgrade pip setuptools wheel
+py -m pip install .
+Copy-Item piweatherrock\config.json-sample piweatherrock\piweatherrock-config.json
+pwr-ui -c .\piweatherrock\piweatherrock-config.json
+```
+
+La aplicación principal y la configuración web usan los mismos entry points en
+Windows, macOS y Linux. La reproducción de imágenes locales es multiplataforma;
+la reproducción de vídeos locales requiere que `ffmpeg` esté instalado y
+disponible en el `PATH`.
 
 También queda disponible `pwr-config-upgrade` para actualizar configuraciones antiguas.
 
@@ -52,7 +68,7 @@ PiWeatherRock incluye una aplicación web local para editar el mismo fichero JSO
 2. Ejecuta la aplicación de configuración indicando el fichero JSON:
 
    ```bash
-   pwr-config-web -c ./piweatherrock/piweatherrock-config.json
+   pwr-config-web -c ./piweatherrock/piweatherrock-config.json --open
    ```
 
    Si tenías scripts antiguos con `pwr-webconfig`, puedes sustituirlos por
@@ -63,32 +79,48 @@ PiWeatherRock incluye una aplicación web local para editar el mismo fichero JSO
 4. Cambia los valores necesarios y pulsa **Guardar cambios**.
 5. Si `pwr-ui` está en ejecución, aplicará automáticamente los cambios válidos al detectar la actualización del JSON.
 
+En la sección **Ubicación y zona horaria**, el mapa se puede mover y ampliar
+normalmente. Para cambiar las coordenadas con el ratón, pulsa **Colocar
+chincheta en el mapa** y después haz clic en el punto deseado.
+
 ### Qué se puede configurar
 
 La pantalla web expone los campos principales definidos para `piweatherrock/piweatherrock-config.json`:
 
-- **Ubicación:** `lat`, `lon` y `timezone`.
+- **Ubicación:** `lat`, `lon` y `timezone`. La plantilla incluida usa Getafe
+  como ubicación inicial (`40.30825`, `-3.732393`, `Europe/Madrid`).
 - **Open-Meteo:** `ds_api_key`, mantenido por compatibilidad como identificador heredado.
 - **Unidades e idiomas:** `units`, `lang` y `ui_lang`.
 - **Actualización meteorológica:** `update_freq`, en segundos.
 - **Presentación:** `fullscreen`, `12hour_disp` e `icon_offset`.
-- **Pantallas visibles y tiempos:** `plugins.daily`, `plugins.hourly`,
-  `plugins.info` y `plugins.media` permiten activar/desactivar páginas y
-  ajustar su tiempo de visualización.
+- **Pausas de rotación:** los controles globales se muestran separados de la
+  duración visible de cada página (`daily`, `hourly`, `info` y `media`) para
+  ver claramente qué pausa corresponde a cada pantalla.
 - **Medios locales:** carpeta, orden aleatorio, modo de ajuste y extensiones
-  permitidas para `plugins.media`.
+  permitidas para `plugins.media`. Las rutas pueden usar `~` o variables de
+  entorno, pero la carpeta expandida debe existir antes de activar la página.
 - **Diagnóstico:** `log_level`.
 
 ### Validación y guardado
 
-Al guardar, la aplicación carga el JSON actual, convierte los valores del formulario al tipo esperado, valida la configuración y escribe el fichero de forma atómica. Si ya existía un fichero de configuración, se conserva una copia con sufijo `.bak`.
+Al guardar, la aplicación carga el JSON actual, convierte los valores del formulario al tipo esperado, valida la configuración y escribe el fichero de forma atómica en UTF-8. Si ya existía un fichero de configuración, se conserva una copia con sufijo `.bak`.
 
-El enlace **Validar configuración** abre `/status` y devuelve:
+El botón **Revisar configuración** abre una vista con la configuración cargada,
+la plataforma detectada, disponibilidad de `ffmpeg` y estado de la carpeta de
+medios. El botón **Probar Open-Meteo** hace una petición real con la latitud,
+longitud y zona horaria configuradas.
+
+El enlace **Estado simple** abre `/status` y devuelve:
 
 - `OK: configuración válida...` cuando el JSON cumple los requisitos.
 - `ERROR: ...` con código HTTP 400 si falta un campo, hay un tipo incorrecto o algún valor está fuera de rango.
 
 Si el JSON queda inválido mientras `pwr-ui` está funcionando, la interfaz principal mantiene la configuración activa anterior y registra el error en lugar de aplicar el cambio defectuoso.
+
+El guardado está protegido con token CSRF y los mensajes de éxito no reflejan
+texto arbitrario desde la URL; la aplicación también envía cabeceras de
+seguridad como CSP, `Referrer-Policy`, `X-Content-Type-Options` y
+`X-Frame-Options`.
 
 ### Seguridad de red
 
@@ -97,6 +129,10 @@ Por defecto, la aplicación escucha solo en `127.0.0.1:8888`, es decir, únicame
 ```bash
 pwr-config-web -c ./piweatherrock/piweatherrock-config.json
 ```
+
+Puedes añadir `--open` para abrir el navegador automáticamente. Si el puerto
+elegido ya está ocupado, el comando lo indica con un error claro antes de
+arrancar CherryPy.
 
 Solo usa `--host` si necesitas acceder desde otro equipo de tu red y entiendes el riesgo de exponer la configuración:
 
@@ -137,7 +173,7 @@ La pantalla de información reduce el contenido visual para ayudar a evitar quem
 
 ## Pantalla de medios locales
 
-La pantalla de medios locales funciona como marco digital. Lee imágenes y vídeos cortos de una carpeta local configurada en `plugins.media.path`, que debe existir antes de activar `plugins.media.enabled`, los escala a la pantalla y permite elegir el modo de ajuste:
+La pantalla de medios locales funciona como marco digital. Lee imágenes y vídeos cortos de una carpeta local configurada en `plugins.media.path`, que debe existir antes de activar `plugins.media.enabled`, los escala a la pantalla y permite elegir el modo de ajuste. La plantilla usa `cover` por defecto:
 
 - `contain`: muestra el archivo completo con bandas si hace falta.
 - `cover`: llena toda la pantalla recortando lo necesario.

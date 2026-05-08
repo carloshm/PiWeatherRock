@@ -42,9 +42,16 @@ pwr-config-web -c ./piweatherrock/piweatherrock-config.json
 
 The config UI binds to `127.0.0.1:8888` by default. Use `--host` and `--port`
 only when you intentionally want to expose it elsewhere on your network.
+Add `--open` to launch the default browser automatically. If the chosen port is
+already in use, the command exits with a clear error instead of a server stack
+trace.
 The same UI exposes the screen selection, display time, and local media folder
-settings. The interface supports both light and dark themes with an automatic
-toggle based on system preference.
+settings. The location map can be panned and zoomed normally; use the pin button
+when you want a map click to update latitude and longitude. The interface
+supports both light and dark themes with an automatic toggle based on system
+preference. It also includes runtime validation, CSRF-protected saves, security
+headers, and an Open-Meteo test using the configured latitude, longitude, and
+timezone.
 See the expanded visual guide in [`docs/README.md`](docs/README.md#aplicaci%C3%B3n-web-de-configuraci%C3%B3n).
 
 ## Installation
@@ -67,7 +74,8 @@ system packages, creates a virtual environment at `~/pwr-env`, installs
 PiWeatherRock with `pip install .`, and prints the commands needed to run the
 application.
 
-Before starting the UI, create and edit your configuration file:
+Before starting the UI, create and edit your configuration file. The sample
+configuration defaults to Getafe, Spain (`Europe/Madrid`):
 
 ```bash
 source ~/pwr-env/bin/activate
@@ -76,7 +84,7 @@ cp piweatherrock/config.json-sample piweatherrock/piweatherrock-config.json
 pwr-ui -c ./piweatherrock/piweatherrock-config.json
 ```
 
-### Manual or development installation
+### Manual or development installation (macOS/Linux)
 
 ```bash
 python3 -m venv .venv
@@ -87,6 +95,26 @@ cp piweatherrock/config.json-sample piweatherrock/piweatherrock-config.json
 # Edit piweatherrock/piweatherrock-config.json before running.
 pwr-ui -c ./piweatherrock/piweatherrock-config.json
 ```
+
+### Manual or development installation (Windows)
+
+Use PowerShell from the repository root:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+py -m pip install --upgrade pip setuptools wheel
+py -m pip install .
+Copy-Item piweatherrock\config.json-sample piweatherrock\piweatherrock-config.json
+# Edit piweatherrock\piweatherrock-config.json before running.
+pwr-ui -c .\piweatherrock\piweatherrock-config.json
+```
+
+The `pwr-config-web` configuration UI works the same way on Windows, macOS,
+and Linux. Local image playback uses pygame on all supported platforms. Local
+video playback requires `ffmpeg` to be installed and available on `PATH`. Local
+media paths may use `~` or environment variables, but the expanded folder must
+exist before enabling the media page.
 
 See [`docs/`](docs/) for an application walkthrough with screenshots.
 

@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 """Local media screen for images and short videos."""
 
-import os
-import random
-import select
-import subprocess
-import time
 import math
+import os
+import queue
+import random
+import subprocess
+import threading
+import time
 
 import pygame
 
 from piweatherrock.config_manager import (
     MEDIA_IMAGE_EXTENSIONS,
     MEDIA_VIDEO_EXTENSIONS,
+    expand_config_path,
 )
 
 
@@ -35,8 +37,9 @@ class PluginMedia:
         self.current_item = None
         self.current_surface = None
         self.video_process = None
+        self.video_reader = None
+        self.video_frames = queue.Queue(maxsize=2)
         self.video_failed_path = None
-        self.video_buffer = b""
         self.last_scan = 0
         self.signature = None
         self.get_rock_values(weather_rock)
@@ -106,7 +109,7 @@ class PluginMedia:
 
         self.signature = signature
         self.last_scan = now
-        media_path = self.media_config.get("path", "")
+        media_path = expand_config_path(self.media_config.get("path", ""))
         if not os.path.isdir(media_path):
             self.items = []
             return
@@ -164,7 +167,6 @@ class PluginMedia:
         self._stop_video()
         self.current_surface = None
         self.video_failed_path = None
-        self.video_buffer = b""
         if not self.items:
             self.current_index = -1
             self.current_item = None
@@ -249,7 +251,7 @@ class PluginMedia:
             "-",
         ]
         try:
-            return subprocess.Popen(
+            process = subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL)
@@ -257,48 +259,86 @@ class PluginMedia:
             self.log.warning("ffmpeg is not available for video playback")
             return None
 
+        frame_size = self.xmax * self.ymax * 3
+        frames = queue.Queue(maxsize=2)
+        self.video_frames = frames
+        self.video_reader = threading.Thread(
+            target=self._read_video_frames,
+            args=(process, path, frame_size, frames))
+        self.video_reader.daemon = True
+        self.video_reader.start()
+        return process
+
     def _stop_video(self):
-        if not self._is_video_playing():
+        process = self.video_process
+        if process is None:
             return
-        self.video_process.terminate()
-        try:
-            self.video_process.wait(timeout=1)
-        except subprocess.TimeoutExpired:
-            self.video_process.kill()
-            self.video_process.wait()
+
+        if process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=1)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+        if self.video_reader is not None:
+            self.video_reader.join(timeout=1)
+        if process.stdout is not None:
+            process.stdout.close()
         self.video_process = None
+        self.video_reader = None
+        self.video_frames = queue.Queue(maxsize=2)
 
     def _is_video_playing(self):
         return self.video_process is not None
 
-    def _read_video_frame(self, path):
-        frame_size = self.xmax * self.ymax * 3
-        process = self.video_process
-        if process.poll() is not None:
-            if not self.video_buffer:
-                return b""
+    def _read_video_frames(self, process, path, frame_size, frames):
+        try:
+            while True:
+                frame = self._read_exact_frame(process.stdout, frame_size)
+                if len(frame) < frame_size:
+                    break
+                self._queue_video_frame(frames, frame)
+        except OSError:
+            self.log.exception("Could not read media video %s", path)
+        finally:
+            self._queue_video_frame(frames, b"")
 
-        ready, _, _ = select.select(
-            [process.stdout], [], [], self.VIDEO_READ_TIMEOUT)
-        if not ready:
+    def _read_exact_frame(self, stream, frame_size):
+        if stream is None:
+            return b""
+        frame = b""
+        while len(frame) < frame_size:
+            chunk = stream.read(frame_size - len(frame))
+            if not chunk:
+                break
+            frame += chunk
+        return frame
+
+    def _queue_video_frame(self, frames, frame):
+        try:
+            frames.put_nowait(frame)
+            return
+        except queue.Full:
+            pass
+
+        try:
+            frames.get_nowait()
+        except queue.Empty:
+            pass
+        try:
+            frames.put_nowait(frame)
+        except queue.Full:
+            pass
+
+    def _read_video_frame(self, path):
+        process = self.video_process
+        try:
+            return self.video_frames.get(timeout=self.VIDEO_READ_TIMEOUT)
+        except queue.Empty:
             if process.poll() is not None:
                 return b""
             return None
-
-        try:
-            chunk = os.read(process.stdout.fileno(),
-                            frame_size - len(self.video_buffer))
-        except OSError:
-            self.log.exception("Could not read media video %s", path)
-            return b""
-        if not chunk:
-            return b""
-        self.video_buffer += chunk
-        if len(self.video_buffer) < frame_size:
-            return None
-        frame = self.video_buffer[:frame_size]
-        self.video_buffer = self.video_buffer[frame_size:]
-        return frame
 
     def _render_message(self, message):
         self.screen.fill((0, 0, 0))

@@ -56,7 +56,7 @@ DEFAULT_PLUGINS = {
         "pause": 20,
         "path": "",
         "shuffle": False,
-        "fit": "contain",
+        "fit": "cover",
         "extensions": "jpg,jpeg,png,gif,bmp,mp4,mov,m4v,avi,webm",
     },
 }
@@ -131,7 +131,7 @@ CONFIG_FORM_FIELDS = [
 def load_config(config_file):
     """Load and validate a PiWeatherRock JSON configuration."""
     try:
-        with open(config_file, "r") as f:
+        with open(config_file, "r", encoding="utf-8") as f:
             config = json.load(f)
     except (IOError, ValueError) as exc:
         raise ConfigError("Could not load config file '{}': {}".format(
@@ -236,7 +236,7 @@ def write_config_atomic(config_file, config, backup=True):
         suffix=".tmp",
         dir=config_dir)
     try:
-        with os.fdopen(fd, "w") as f:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(config, f, indent=4, sort_keys=True)
             f.write("\n")
         os.replace(temp_file, config_file)
@@ -358,7 +358,8 @@ def _validate_media_plugin(plugin_config, errors):
         errors.append("Field plugins.media.path has invalid type")
     elif plugin_config.get("enabled") and not plugin_config["path"]:
         errors.append("Field plugins.media.path is required when media is enabled")
-    elif plugin_config.get("enabled") and not os.path.isdir(plugin_config["path"]):
+    elif (plugin_config.get("enabled")
+          and not os.path.isdir(expand_config_path(plugin_config["path"]))):
         errors.append("Field plugins.media.path must be an existing directory")
     if not isinstance(plugin_config.get("shuffle"), bool):
         errors.append("Field plugins.media.shuffle has invalid type")
@@ -384,6 +385,11 @@ def _split_extensions(value):
         if extension:
             extensions.append(extension)
     return extensions
+
+
+def expand_config_path(path):
+    """Expand user and environment variables in configured local paths."""
+    return os.path.abspath(os.path.expandvars(os.path.expanduser(path)))
 
 
 def _collect_diff(path, old_value, new_value, changed):

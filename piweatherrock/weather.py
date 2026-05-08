@@ -59,36 +59,7 @@ class Weather:
         self.weather = {}
         self.get_forecast()
 
-        if platform.system() == 'Darwin':
-            pygame.display.init()
-            driver = pygame.display.get_driver()
-            self.log.debug(f"Using the {driver} driver.")
-        else:
-            # Based on "Python GUI in Linux frame buffer"
-            # http://www.karoltomala.com/blog/?p=679
-            disp_no = os.getenv("DISPLAY")
-            if disp_no:
-                self.log.debug(f"X Display = {disp_no}")
-
-            # Check which frame buffer drivers are available
-            # Start with fbcon since directfb hangs with composite output
-            drivers = ['x11', 'fbcon', 'directfb', 'svgalib']
-            found = False
-            for driver in drivers:
-                # Make sure that SDL_VIDEODRIVER is set
-                if not os.getenv('SDL_VIDEODRIVER'):
-                    os.putenv('SDL_VIDEODRIVER', driver)
-                try:
-                    pygame.display.init()
-                except pygame.error:
-                    self.log.debug("Driver: {driver} failed.")
-                    continue
-                found = True
-                break
-
-            if not found:
-                self.log.critical("No suitable video driver found!")
-                sys.exit(1)
+        self._init_display()
 
         size = (pygame.display.Info().current_w,
                 pygame.display.Info().current_h)
@@ -107,6 +78,50 @@ class Weather:
         self.time_date_small_text_height = 0.075
         self.time_date_y_position = 8
         self.time_date_small_y_position = 18
+
+    def _init_display(self):
+        system = platform.system()
+        if system != 'Linux':
+            pygame.display.init()
+            driver = pygame.display.get_driver()
+            self.log.debug("Using the %s driver on %s.", driver, system)
+            return
+
+        # Based on "Python GUI in Linux frame buffer"
+        # http://www.karoltomala.com/blog/?p=679
+        disp_no = os.getenv("DISPLAY")
+        if disp_no:
+            self.log.debug(f"X Display = {disp_no}")
+
+        configured_driver = os.getenv('SDL_VIDEODRIVER')
+        if configured_driver:
+            try:
+                pygame.display.init()
+            except pygame.error:
+                self.log.critical(
+                    "Configured SDL video driver %s failed.",
+                    configured_driver)
+                sys.exit(1)
+            self.log.debug("Using the %s driver.", pygame.display.get_driver())
+            return
+
+        # Check which frame buffer drivers are available.
+        # Start with x11, then fall back to framebuffer drivers for Raspberry Pi.
+        drivers = ['x11', 'fbcon', 'directfb', 'svgalib']
+        for driver in drivers:
+            os.environ['SDL_VIDEODRIVER'] = driver
+            try:
+                pygame.display.init()
+            except pygame.error:
+                pygame.display.quit()
+                self.log.debug("Driver %s failed.", driver)
+                continue
+            self.log.debug("Using the %s driver.", pygame.display.get_driver())
+            return
+
+        os.environ.pop('SDL_VIDEODRIVER', None)
+        self.log.critical("No suitable video driver found!")
+        sys.exit(1)
 
     def __del__(self):
         "Destructor to make sure pygame shuts down, etc."
