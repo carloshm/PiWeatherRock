@@ -773,9 +773,9 @@ class ConfigWebApp:
       }});
       var lat = document.getElementById('lat');
       var lon = document.getElementById('lon');
-       var frame = document.getElementById('location-map');
-       var link = document.getElementById('open-map-link');
-       var preset = document.getElementById('location-preset');
+      var frame = document.getElementById('location-map');
+      var link = document.getElementById('open-map-link');
+      var preset = document.getElementById('location-preset');
       function mapUrl(latitude, longitude) {{
         var delta = {map_delta};
         var left = longitude - delta;
@@ -798,21 +798,21 @@ class ConfigWebApp:
           '&mlon=' + encodeURIComponent(longitude) + '#map=12/' +
           encodeURIComponent(latitude) + '/' + encodeURIComponent(longitude);
       }}
-       if (lat && lon && frame && link) {{
-         lat.addEventListener('change', updateMap);
-         lon.addEventListener('change', updateMap);
-         if (preset) {{
-           preset.addEventListener('change', function () {{
-             if (!preset.value) {{
-               return;
-             }}
-             var parts = preset.value.split(',');
-             lat.value = parts[0];
-             lon.value = parts[1];
-             updateMap();
-           }});
-         }}
-       }}
+      if (lat && lon && frame && link) {{
+        lat.addEventListener('change', updateMap);
+        lon.addEventListener('change', updateMap);
+        if (preset) {{
+          preset.addEventListener('change', function () {{
+            if (!preset.value) {{
+              return;
+            }}
+            var parts = preset.value.split(',');
+            lat.value = parts[0];
+            lon.value = parts[1];
+            updateMap();
+          }});
+        }}
+      }}
     }}());
   </script>
 </body>
