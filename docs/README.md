@@ -13,6 +13,7 @@ La instalación vigente usa el empaquetado definido en `pyproject.toml`.
 En Raspberry Pi/Linux se puede usar el script del repositorio:
 
 ```bash
+chmod +x install.sh
 ./install.sh Europe/Madrid
 ```
 
