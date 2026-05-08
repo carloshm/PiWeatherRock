@@ -44,6 +44,7 @@ The config UI binds to `127.0.0.1:8888` by default. Use `--host` and `--port`
 only when you intentionally want to expose it elsewhere on your network.
 The same UI exposes the screen selection, display time, and local media folder
 settings.
+See the expanded visual guide in [`docs/README.md`](docs/README.md#aplicaci%C3%B3n-web-de-configuraci%C3%B3n).
 
 ## Installation
 
