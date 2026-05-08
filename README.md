@@ -43,13 +43,15 @@ pwr-config-web -c ./piweatherrock/piweatherrock-config.json
 The config UI binds to `127.0.0.1:8888` by default. Use `--host` and `--port`
 only when you intentionally want to expose it elsewhere on your network.
 The same UI exposes the screen selection, display time, and local media folder
-settings.
+settings. The legacy `pwr-webconfig` command is kept as an alias for the same
+improved configuration server.
 See the expanded visual guide in [`docs/README.md`](docs/README.md#aplicaci%C3%B3n-web-de-configuraci%C3%B3n).
 
 ## Installation
 
 PiWeatherRock is packaged with `pyproject.toml` and installs the current
-console commands `pwr-ui` and `pwr-config-upgrade`.
+console commands `pwr-ui`, `pwr-config-web`, `pwr-webconfig`, and
+`pwr-config-upgrade`.
 
 ### Raspberry Pi / Linux
 
@@ -138,7 +140,7 @@ To configure from a browser:
 pwr-config-web -c ./piweatherrock/piweatherrock-config.json
 ```
 
-> **Note:** `pwr-ui`, `pwr-config-web`, and `pwr-config-upgrade` are installed as console entry points via `pyproject.toml`. See [PEP 621](https://peps.python.org/pep-0621/) and [setup.py deprecation](https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html) for background.
+> **Note:** `pwr-ui`, `pwr-config-web`, `pwr-webconfig`, and `pwr-config-upgrade` are installed as console entry points via `pyproject.toml`. See [PEP 621](https://peps.python.org/pep-0621/) and [setup.py deprecation](https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html) for background.
 
 ## Validate Service Data
 
