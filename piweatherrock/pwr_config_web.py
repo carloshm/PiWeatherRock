@@ -31,8 +31,10 @@ TEXT = {
         'current_value_fallback': '{} (current value)',
         'error': 'Error',
         'legend': 'PiWeatherRock configuration',
+        'location_custom': 'Custom coordinates',
+        'location_preset': 'Quick location',
         'open_map': 'Open larger map',
-        'map_hint': 'Use the map as a visual reference for latitude and longitude.',
+        'map_hint': 'Choose a preset or edit latitude and longitude manually; the map updates before saving.',
         'map_title': 'Location map preview',
         'save': 'Save changes',
         'status_ok': 'OK: valid configuration. The UI will apply changes automatically.',
@@ -86,8 +88,10 @@ TEXT = {
         'current_value_fallback': '{} (valor actual)',
         'error': 'Error',
         'legend': 'Configuración PiWeatherRock',
+        'location_custom': 'Coordenadas personalizadas',
+        'location_preset': 'Ubicación rápida',
         'open_map': 'Abrir mapa grande',
-        'map_hint': 'Usa el mapa como referencia visual para latitud y longitud.',
+        'map_hint': 'Elige una ubicación o edita latitud y longitud manualmente; el mapa se actualiza antes de guardar.',
         'map_title': 'Vista previa del mapa de ubicación',
         'save': 'Guardar cambios',
         'status_ok': 'OK: configuración válida. La UI aplicará los cambios automáticamente.',
@@ -332,6 +336,15 @@ SELECT_OPTIONS = {
                      ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')],
 }
 
+LOCATION_PRESETS = (
+    ('Madrid', 40.416775, -3.703790),
+    ('Barcelona', 41.387397, 2.168568),
+    ('Valencia', 39.469907, -0.376288),
+    ('Sevilla', 37.389092, -5.984459),
+    ('Bilbao', 43.263013, -2.934985),
+    ('A Coruña', 43.362344, -8.411540),
+)
+
 
 
 class ConfigWebApp:
@@ -340,6 +353,7 @@ class ConfigWebApp:
 
     @cherrypy.expose
     def index(self, message=""):
+        self._set_no_store_headers()
         try:
             config = load_config(self.config_file)
             body = self._render_form(config, message)
@@ -370,6 +384,7 @@ class ConfigWebApp:
 
     @cherrypy.expose
     def status(self):
+        self._set_no_store_headers()
         try:
             config = load_config(self.config_file)
             return self._text(config, "status_ok")
@@ -473,15 +488,40 @@ class ConfigWebApp:
   <div class="map-copy">
     <strong>{title}</strong>
     <span>{hint}</span>
+    <label for="location-preset">{preset_label}</label>
+    <select id="location-preset" name="location-preset">
+      <option value="">{custom_label}</option>
+      {preset_options}
+    </select>
     <a id="open-map-link" href="{open_url}" target="_blank" rel="noopener">{open_map}</a>
   </div>
   <iframe id="location-map" title="{title}" src="{map_url}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
 </div>""".format(
             title=html.escape(self._text(config, "map_title"), quote=True),
             hint=html.escape(self._text(config, "map_hint")),
+            preset_label=html.escape(self._text(config, "location_preset")),
+            custom_label=html.escape(self._text(config, "location_custom")),
+            preset_options=self._render_location_preset_options(lat, lon),
             open_map=html.escape(self._text(config, "open_map")),
             open_url=html.escape(open_url, quote=True),
             map_url=html.escape(map_url, quote=True))
+
+    def _render_location_preset_options(self, current_lat, current_lon):
+        options = []
+        for label, lat, lon in LOCATION_PRESETS:
+            selected = " selected" if self._same_coordinate_pair(
+                current_lat, current_lon, lat, lon) else ""
+            options.append(
+                '<option value="{lat},{lon}"{selected}>{label}</option>'.format(
+                    lat=html.escape(str(lat), quote=True),
+                    lon=html.escape(str(lon), quote=True),
+                    selected=selected,
+                    label=html.escape(label)))
+        return "\n      ".join(options)
+
+    def _same_coordinate_pair(self, first_lat, first_lon, second_lat, second_lon):
+        return round(first_lat, 6) == round(second_lat, 6) and round(
+            first_lon, 6) == round(second_lon, 6)
 
     def _page(self, title, body, language="en"):
         return """<!doctype html>
@@ -727,8 +767,9 @@ class ConfigWebApp:
       }});
       var lat = document.getElementById('lat');
       var lon = document.getElementById('lon');
-      var frame = document.getElementById('location-map');
-      var link = document.getElementById('open-map-link');
+       var frame = document.getElementById('location-map');
+       var link = document.getElementById('open-map-link');
+       var preset = document.getElementById('location-preset');
       function mapUrl(latitude, longitude) {{
         var delta = {map_delta};
         var left = longitude - delta;
@@ -751,10 +792,21 @@ class ConfigWebApp:
           '&mlon=' + encodeURIComponent(longitude) + '#map=12/' +
           encodeURIComponent(latitude) + '/' + encodeURIComponent(longitude);
       }}
-      if (lat && lon && frame && link) {{
-        lat.addEventListener('change', updateMap);
-        lon.addEventListener('change', updateMap);
-      }}
+       if (lat && lon && frame && link) {{
+         lat.addEventListener('change', updateMap);
+         lon.addEventListener('change', updateMap);
+         if (preset) {{
+           preset.addEventListener('change', function () {{
+             if (!preset.value) {{
+               return;
+             }}
+             var parts = preset.value.split(',');
+             lat.value = parts[0];
+             lon.value = parts[1];
+             updateMap();
+           }});
+         }}
+       }}
     }}());
   </script>
 </body>
@@ -813,7 +865,8 @@ class ConfigWebApp:
 
     def _text(self, config, key):
         language = self._language(config)
-        return TEXT.get(language, TEXT["en"])[key]
+        language_text = TEXT.get(language, TEXT["en"])
+        return language_text.get(key, TEXT["en"][key])
 
     def _label(self, config, key):
         language = self._language(config)
@@ -827,6 +880,11 @@ class ConfigWebApp:
         if language not in TEXT:
             language = "en"
         return language
+
+    def _set_no_store_headers(self):
+        response = getattr(cherrypy, "response", None)
+        if response is not None:
+            response.headers["Cache-Control"] = "no-store, max-age=0"
 
 
 def main():

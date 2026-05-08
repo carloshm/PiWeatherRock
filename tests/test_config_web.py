@@ -68,6 +68,8 @@ class ConfigWebTest(unittest.TestCase):
         self.assertIn('class="help-icon" tabindex="0" role="button"', html)
         self.assertIn('id="location-map"', html)
         self.assertIn('openstreetmap.org/export/embed.html', html)
+        self.assertNotIn("<fieldset", html)
+        self.assertNotIn("<legend", html)
 
     def test_form_uses_selects_for_constrained_values(self):
         html = ConfigWebApp("config.json")._render_form(VALID_CONFIG)
@@ -93,6 +95,13 @@ class ConfigWebTest(unittest.TestCase):
         self.assertIn('id="theme-toggle"', html)
         self.assertIn('data-theme', html)
         self.assertIn('localStorage', html)
+
+    def test_location_section_includes_preset_selector(self):
+        html = ConfigWebApp("config.json")._render_form(VALID_CONFIG)
+
+        self.assertIn('id="location-preset"', html)
+        self.assertIn('<option value="40.416775,-3.70379">Madrid</option>', html)
+        self.assertIn("preset.addEventListener('change'", html)
 
     def test_media_section_rendered(self):
         html = ConfigWebApp("config.json")._render_form(VALID_CONFIG)
