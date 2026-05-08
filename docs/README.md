@@ -76,6 +76,16 @@ PiWeatherRock incluye una aplicación web local para editar el mismo fichero JSO
    `pwr-config-web`, que es ahora el único punto de entrada para la
    configuración web.
 
+   Si la terminal muestra `pwr-config-web: orden no encontrada`, el paquete no
+   está instalado en el entorno virtual activo. Activa el entorno y reinstala el
+   paquete desde la raíz del repositorio:
+
+   ```bash
+   source ~/pwr-env/bin/activate
+   python3 -m pip install .
+   command -v pwr-config-web
+   ```
+
 3. Abre el navegador en `http://127.0.0.1:8888`.
 4. Cambia los valores necesarios y pulsa **Guardar cambios**.
 5. Si `pwr-ui` está en ejecución, aplicará automáticamente los cambios válidos al detectar la actualización del JSON.

@@ -20,8 +20,15 @@ python3 -m venv ~/pwr-env
 source ~/pwr-env/bin/activate
 
 echo "==> Installing PiWeatherRock..."
-pip install --upgrade pip setuptools wheel
-pip install .
+python3 -m pip install --upgrade pip setuptools wheel
+python3 -m pip install .
+
+echo "==> Verifying console commands..."
+if ! command -v pwr-ui >/dev/null 2>&1 || ! command -v pwr-config-web >/dev/null 2>&1; then
+    echo "ERROR: PiWeatherRock console commands were not installed in the active environment." >&2
+    echo "Activate the environment with 'source ~/pwr-env/bin/activate' and run 'python3 -m pip install .' from the repository root." >&2
+    exit 1
+fi
 
 echo ""
 echo "Installation complete."
