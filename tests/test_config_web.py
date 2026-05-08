@@ -61,9 +61,13 @@ class ConfigWebTest(unittest.TestCase):
 
     def test_pause_labels_distinguish_global_and_media_pauses(self):
         html = ConfigWebApp("config.json")._render_form(VALID_CONFIG)
+        english_config = dict(VALID_CONFIG, ui_lang="en")
+        english_html = ConfigWebApp("config.json")._render_form(english_config)
 
         self.assertIn('Pausa entre ciclos completos de páginas', html)
         self.assertIn('Pausa entre archivos de medios locales', html)
+        self.assertIn('Pause between full page cycles', english_html)
+        self.assertIn('Pause between local media items', english_html)
 
 
 if __name__ == "__main__":

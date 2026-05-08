@@ -314,9 +314,6 @@ FORM_SECTIONS = [
     ('diagnostics', (('log_level',),)),
 ]
 
-FIELD_BY_PATH = {path: (label_key, field_type)
-                 for path, label_key, field_type in CONFIG_FORM_FIELDS}
-
 SELECT_OPTIONS = {
     ('timezone',): [(timezone, timezone) for timezone in SUPPORTED_TIMEZONES],
     ('units',): [('si', 'Metric (SI)'), ('us', 'US'), ('ca', 'Canada'),
@@ -411,7 +408,7 @@ class ConfigWebApp:
                           self._language(config))
 
     def _render_field(self, config, path):
-        label_key, field_type = FIELD_BY_PATH[path]
+        label_key, field_type = self._field_definition(path)
         value = get_config_value(config, path)
         name = field_name(path)
         escaped_name = html.escape(name)
@@ -444,7 +441,7 @@ class ConfigWebApp:
         options = list(SELECT_OPTIONS[path])
         option_values = [option_value for option_value, _ in options]
         if value not in option_values:
-            options.insert(0, (value, value))
+            options.insert(0, (value, "{} (current value)".format(value)))
         option_html = []
         for option_value, option_label in options:
             selected = " selected" if option_value == value else ""
@@ -683,6 +680,12 @@ class ConfigWebApp:
         if field_type == "float":
             return float(raw_value)
         return raw_value.strip()
+
+    def _field_definition(self, path):
+        for field_path, label_key, field_type in CONFIG_FORM_FIELDS:
+            if field_path == path:
+                return label_key, field_type
+        raise KeyError(path)
 
     def _text(self, config, key):
         language = self._language(config)
