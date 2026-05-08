@@ -32,7 +32,6 @@ Homepage = "https://github.com/carloshm/PiWeatherRock"
 [project.scripts]
 pwr-ui = "piweatherrock.pwr_ui:main"
 pwr-config-web = "piweatherrock.pwr_config_web:main"
-pwr-webconfig = "piweatherrock.pwr_config_web:main"
 pwr-config-upgrade = "piweatherrock.pwr_config_upgrade:main"
 
 [tool.setuptools.packages.find]

@@ -492,7 +492,7 @@ class ConfigWebApp:
   <title>{title}</title>
   <style>
     :root {{
-      color-scheme: light;
+      color-scheme: light dark;
       --bg: #f3f6fb;
       --card: #ffffff;
       --text: #162033;
@@ -501,26 +501,79 @@ class ConfigWebApp:
       --brand-dark: #1d4ed8;
       --border: #dbe3ef;
       --shadow: 0 18px 45px rgba(22, 32, 51, .10);
+      --input-bg: #fbfdff;
+      --input-border: #cbd5e1;
+      --toggle-bg: #f8fbff;
+      --map-bg: #f8fbff;
+      --help-bg: #eef4ff;
+      --help-border: #bfdbfe;
+      --hero-from: #1e3a8a;
+      --hero-to: #2563eb;
+      --msg-bg: #ecfdf5;
+      --msg-border: #86efac;
+      --msg-text: #14532d;
+      --label-color: #26364d;
+      --body-gradient: linear-gradient(135deg, #eaf2ff 0%, var(--bg) 42%, #f8fbff 100%);
+    }}
+    [data-theme="dark"] {{
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --brand: #3b82f6;
+      --brand-dark: #60a5fa;
+      --border: #334155;
+      --shadow: 0 18px 45px rgba(0, 0, 0, .35);
+      --input-bg: #0f172a;
+      --input-border: #475569;
+      --toggle-bg: #1e293b;
+      --map-bg: #1e293b;
+      --help-bg: #1e3a5f;
+      --help-border: #1d4ed8;
+      --hero-from: #0f172a;
+      --hero-to: #1e40af;
+      --msg-bg: #064e3b;
+      --msg-border: #059669;
+      --msg-text: #a7f3d0;
+      --label-color: #cbd5e1;
+      --body-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 42%, #0f172a 100%);
     }}
     * {{ box-sizing: border-box; }}
     body {{
-      background: linear-gradient(135deg, #eaf2ff 0%, var(--bg) 42%, #f8fbff 100%);
+      background: var(--body-gradient);
       color: var(--text);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       margin: 0;
       min-height: 100vh;
+      transition: background .3s, color .3s;
     }}
     main {{ margin: 0 auto; max-width: 74rem; padding: 2rem; }}
     .hero {{
-      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      background: linear-gradient(135deg, var(--hero-from), var(--hero-to));
       border-radius: 1.4rem;
       box-shadow: var(--shadow);
       color: white;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
       margin-bottom: 1.5rem;
       padding: 2rem;
     }}
+    .hero-text {{ flex: 1; }}
     h1 {{ font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1; margin: 0 0 .65rem; }}
     .subtitle {{ color: rgba(255,255,255,.84); font-size: 1.05rem; margin: 0; max-width: 48rem; }}
+    .theme-toggle {{
+      background: rgba(255, 255, 255, .15);
+      border: 1px solid rgba(255, 255, 255, .3);
+      border-radius: .7rem;
+      color: white;
+      cursor: pointer;
+      font-size: 1.3rem;
+      line-height: 1;
+      padding: .5rem .65rem;
+      transition: background .2s;
+    }}
+    .theme-toggle:hover {{ background: rgba(255, 255, 255, .25); }}
     .sections {{ display: grid; gap: 1.1rem; }}
     .card {{
       background: var(--card);
@@ -528,13 +581,14 @@ class ConfigWebApp:
       border-radius: 1rem;
       box-shadow: 0 10px 30px rgba(22, 32, 51, .06);
       padding: 1.25rem;
+      transition: background .3s, border-color .3s;
     }}
     .section-heading {{ align-items: center; display: flex; gap: .65rem; justify-content: space-between; }}
     h2 {{ font-size: 1.15rem; margin: 0; }}
     .help-icon {{
       align-items: center;
-      background: #eef4ff;
-      border: 1px solid #bfdbfe;
+      background: var(--help-bg);
+      border: 1px solid var(--help-border);
       border-radius: 999px;
       color: var(--brand);
       display: inline-flex;
@@ -545,15 +599,15 @@ class ConfigWebApp:
     }}
     .section-help {{ color: var(--muted); margin: .45rem 0 1rem; }}
     .field-grid {{ display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }}
-    label {{ color: #26364d; display: block; font-size: .92rem; font-weight: 700; margin-bottom: .35rem; }}
+    label {{ color: var(--label-color); display: block; font-size: .92rem; font-weight: 700; margin-bottom: .35rem; }}
     input, select {{
-      background: #fbfdff;
-      border: 1px solid #cbd5e1;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
       border-radius: .7rem;
       color: var(--text);
       font: inherit;
       padding: .72rem .85rem;
-      transition: border-color .15s, box-shadow .15s;
+      transition: border-color .15s, box-shadow .15s, background .3s;
       width: 100%;
     }}
     input:focus, select:focus {{
@@ -564,7 +618,7 @@ class ConfigWebApp:
     .field-checkbox {{ align-items: end; display: flex; min-height: 4.4rem; }}
     .toggle {{
       align-items: center;
-      background: #f8fbff;
+      background: var(--toggle-bg);
       border: 1px solid var(--border);
       border-radius: .8rem;
       cursor: pointer;
@@ -584,7 +638,7 @@ class ConfigWebApp:
       margin-top: 1rem;
       overflow: hidden;
     }}
-    .map-copy {{ background: #f8fbff; display: flex; flex-direction: column; gap: .5rem; padding: 1rem; }}
+    .map-copy {{ background: var(--map-bg); display: flex; flex-direction: column; gap: .5rem; padding: 1rem; }}
     .map-copy span {{ color: var(--muted); }}
     .map-copy a, .status-link {{ color: var(--brand); font-weight: 700; text-decoration: none; }}
     iframe {{ border: 0; min-height: 16rem; width: 100%; }}
@@ -598,32 +652,79 @@ class ConfigWebApp:
       font: inherit;
       font-weight: 800;
       padding: .85rem 1.2rem;
+      transition: background .2s;
     }}
     button:hover {{ background: var(--brand-dark); }}
     .message {{
-      background: #ecfdf5;
-      border: 1px solid #86efac;
+      background: var(--msg-bg);
+      border: 1px solid var(--msg-border);
       border-radius: .8rem;
-      color: #14532d;
+      color: var(--msg-text);
       padding: .9rem 1rem;
     }}
     @media (max-width: 720px) {{
       main {{ padding: 1rem; }}
-      .hero {{ padding: 1.4rem; }}
+      .hero {{ padding: 1.4rem; flex-direction: column; gap: 1rem; }}
       .map-panel {{ grid-template-columns: 1fr; }}
+    }}
+    @media (prefers-color-scheme: dark) {{
+      html:not([data-theme="light"]) {{
+        --bg: #0f172a;
+        --card: #1e293b;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --brand: #3b82f6;
+        --brand-dark: #60a5fa;
+        --border: #334155;
+        --shadow: 0 18px 45px rgba(0, 0, 0, .35);
+        --input-bg: #0f172a;
+        --input-border: #475569;
+        --toggle-bg: #1e293b;
+        --map-bg: #1e293b;
+        --help-bg: #1e3a5f;
+        --help-border: #1d4ed8;
+        --hero-from: #0f172a;
+        --hero-to: #1e40af;
+        --msg-bg: #064e3b;
+        --msg-border: #059669;
+        --msg-text: #a7f3d0;
+        --label-color: #cbd5e1;
+        --body-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 42%, #0f172a 100%);
+      }}
     }}
   </style>
 </head>
 <body>
   <main>
     <header class="hero">
-      <h1>{title}</h1>
-      <p class="subtitle">{subtitle}</p>
+      <div class="hero-text">
+        <h1>{title}</h1>
+        <p class="subtitle">{subtitle}</p>
+      </div>
+      <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">&#9790;</button>
     </header>
     {body}
   </main>
   <script>
     (function () {{
+      var toggle = document.getElementById('theme-toggle');
+      var html = document.documentElement;
+      var stored = localStorage.getItem('pwr-theme');
+      if (stored) {{
+        html.setAttribute('data-theme', stored);
+      }}
+      function updateIcon() {{
+        var theme = html.getAttribute('data-theme');
+        toggle.textContent = theme === 'dark' ? '\\u2600' : '\\u263E';
+      }}
+      updateIcon();
+      toggle.addEventListener('click', function () {{
+        var current = html.getAttribute('data-theme');
+        var next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('pwr-theme', next);
+        updateIcon();
+      }});
       var lat = document.getElementById('lat');
       var lon = document.getElementById('lon');
       var frame = document.getElementById('location-map');
