@@ -21,6 +21,7 @@ Los principales riesgos detectados son:
 4. **Plugins `enabled` ignorados**: la configuración permite habilitar/deshabilitar páginas, pero `Runner` rota siempre entre diario, horario e info.
 5. **Disponibilidad en Raspberry Pi mejorable**: no hay timeout efectivo en peticiones HTTP, la inicialización de vídeo no aborta limpiamente si no hay driver, y los errores de renderizado pueden terminar el bucle principal.
 6. **Pantalla info poco extensible**: `PluginInfo` está acoplado a una pantalla fija de texto; no existe un sistema genérico de páginas rotativas configurables.
+7. **Mapeo Open-Meteo → Dark Sky incompleto**: el adaptador mantiene la compatibilidad interna, pero mezcla estado diario con actual, probabilidad con intensidad de precipitación y unidades solicitadas con etiquetas mostradas.
 
 ## Bugs identificados
 
@@ -158,6 +159,146 @@ Pero la UI usa `config["units"]` para etiquetar grados y viento como si fueran `
 **Impacto:** superficie de riesgo innecesaria y errores más difíciles de diagnosticar. En el caso de `log_level`, si en el futuro la configuración pasa a ser editable desde una interfaz web o cualquier entrada controlable por usuario, el `eval()` sobre ese valor podría convertirse en una vulnerabilidad crítica de inyección de código.
 
 **Recomendación:** eliminar `eval()` en ambos puntos.
+
+## Análisis del mapeo Open-Meteo → Dark Sky
+
+### Contexto
+
+El proyecto ya no consume Dark Sky directamente. `piweatherrock/climate/forecast.py` consulta Open-Meteo y `piweatherrock/climate/openmeteo.py` transforma la respuesta a una estructura compatible con el modelo histórico de Dark Sky:
+
+- `currently`
+- `hourly.data[]`
+- `daily.data[]`
+
+Esto permite que la UI siga accediendo a campos como `weather.temperature`, `weather.summary`, `weather.icon`, `weather.daily[0].temperatureHigh` o `weather.hourly[0].precipProbability` sin conocer el formato nativo de Open-Meteo.
+
+### Diferencias relevantes entre APIs
+
+| Concepto | Dark Sky | Open-Meteo | Situación actual |
+|---|---|---|---|
+| Estructura | Objetos `currently`, `hourly.data[]`, `daily.data[]` | Arrays paralelos por variable | El adaptador reconstruye el modelo tipo Dark Sky |
+| Iconos | Cadenas semánticas (`rain`, `snow`, `clear-day`, etc.) | Códigos WMO numéricos | Hay mapeo manual a nombres de iconos del proyecto |
+| Resumen | Texto descriptivo incluido en la respuesta | Debe derivarse del código WMO | Traducción manual limitada a `en` y `es` |
+| Precipitación | `precipIntensity` e `precipProbability` separados | `precipitation` y `precipitation_probability` separados | Se usa probabilidad como intensidad en varios campos |
+| Unidades | Controladas por `units` de Dark Sky | Controladas por parámetros explícitos | La consulta fuerza Celsius/kmh aunque la UI etiqueta según `config["units"]` |
+| Estado actual | Bloque `currently` rico | `current_weather` limitado | Se mezcla con datos horarios/diarios para completar campos |
+| Día/noche | Iconos diferenciables | Requiere `is_day` o cálculo solar | No se distingue visualmente día/noche |
+
+### Uso real en la aplicación
+
+Los campos con más impacto visual y funcional son:
+
+- `currently.summary` y `currently.icon`: se muestran en la cabecera y afectan a `umbrella_needed()`.
+- `currently.temperature`, `currently.apparentTemperature`, `currently.windSpeed`, `currently.humidity`: se muestran en la parte superior.
+- `daily[].temperatureLow`, `daily[].temperatureHigh`, `daily[].icon`, `daily[].precipProbability`: se muestran en la pantalla diaria.
+- `hourly[].temperature`, `hourly[].icon`, `hourly[].precipProbability`: se muestran en la pantalla horaria.
+- `daily[].sunriseTime` y `daily[].sunsetTime`: alimentan la pantalla de información y el cálculo de horas diurnas.
+
+Por tanto, los errores de mapeo en resumen/icono, probabilidad de lluvia, unidades y humedad afectan directamente a lo que ve el usuario.
+
+### Carencias detectadas
+
+#### Estado actual basado en el código diario
+
+`currently.summary` y `currently.icon` se construyen con `daily_data["weathercode"][0]`, aunque Open-Meteo incluye `current_weather["weathercode"]`.
+
+**Impacto:** la pantalla principal puede mostrar el estado dominante del día en vez del tiempo actual. Por ejemplo, puede mostrar “nublado” aunque en ese momento llueva.
+
+**Recomendación:** usar `current_weather["weathercode"]` para `currently.summary`, `currently.icon` y, si aplica, `currently.precipType`.
+
+#### Probabilidad e intensidad de precipitación mezcladas
+
+En el mapeo horario:
+
+- `precipIntensity` usa `precipitation_probability`.
+- `precipProbability` usa `precipitation_probability / 100`.
+
+En el mapeo diario y actual también se usan probabilidades para campos de intensidad.
+
+**Impacto:** el modelo interno deja de representar la semántica Dark Sky. La UI muestra `precipProbability`, pero cualquier uso futuro de `precipIntensity` partiría de datos incorrectos.
+
+**Recomendación:**
+
+- `hourly.precipIntensity` debería usar `hourly.precipitation`.
+- `hourly.precipProbability` debería seguir usando `hourly.precipitation_probability / 100`.
+- `daily.precipProbability` debería valorar si conviene usar `precipitation_probability_max / 100` para representar mejor el riesgo visible del día, en vez de la media.
+- `daily.precipIntensity` debería documentarse como derivado de `precipitation_sum` o calcularse de forma explícita.
+
+#### `precipType` siempre es `rain`
+
+El adaptador asigna `"rain"` para todos los casos, incluyendo nieve, aguanieve, granizo o tormentas.
+
+**Impacto:** ahora la UI no muestra `precipType`, pero el dato queda incorrecto para futuras pantallas, reglas de paraguas o selección de iconos.
+
+**Recomendación:** derivar `precipType` desde el código WMO:
+
+- lluvia/llovizna: `51`, `53`, `55`, `61`, `63`, `65`, `80`, `81`, `82`;
+- nieve: `71`, `73`, `75`, `77`, `85`, `86`;
+- aguanieve/engelante: `56`, `57`, `66`, `67`;
+- tormenta con granizo: `96`, `99`.
+
+#### Iconos sin distinción día/noche
+
+`get_darksky_icon()` devuelve nombres de iconos propios del proyecto (`clear`, `mostlysunny`, `partlycloudy`, etc.), no los nombres Dark Sky estrictos (`clear-day`, `clear-night`, `partly-cloudy-day`, etc.).
+
+**Impacto:** se pierde fidelidad visual, especialmente por la noche. Además, el comentario de `icon_mapping()` describe convenciones Dark Sky más amplias que las cadenas realmente emitidas.
+
+**Recomendación:**
+
+- Alinear documentación y valores reales del adaptador.
+- Incorporar `is_day` en la consulta de Open-Meteo o derivar día/noche con `sunrise`/`sunset`.
+- Mapear cielo despejado y parcialmente nuboso a variantes diurnas/nocturnas si se añaden iconos o se usan los existentes `nt_*`.
+
+#### Unidades solicitadas distintas de las etiquetas mostradas
+
+`forecast.py` fuerza:
+
+- `temperature_unit=celsius`
+- `windspeed_unit=kmh`
+- `precipitation_unit=mm`
+
+Pero la UI etiqueta temperatura y viento según `config["units"]`.
+
+**Impacto:** con `units="si"` la UI puede etiquetar el viento como metros por segundo aunque Open-Meteo entregue km/h. Con `units="us"` podría mostrar grados Celsius como Fahrenheit.
+
+**Recomendación:** traducir `config["units"]` a parámetros Open-Meteo:
+
+- `si`: Celsius, m/s, mm.
+- `ca`: Celsius, km/h, mm.
+- `uk2`: Celsius, mph, mm.
+- `us`: Fahrenheit, mph, inch.
+
+#### Datos actuales auxiliares tomados de la primera hora filtrada
+
+Los campos `dewPoint`, `humidity`, `pressure`, `cloudCover` y `visibility` se toman de la primera hora futura filtrada. Si no hay horas filtradas, se rellenan con `0`.
+
+**Impacto:** la cabecera puede mostrar humedad `0%` o datos que no corresponden al instante actual.
+
+**Recomendación:** localizar el índice horario más cercano a `current_weather["time"]` y usarlo para completar el bloque `currently`.
+
+#### `cloudCover`, `visibility` y `uvIndex` no conservan semántica Dark Sky
+
+Problemas detectados:
+
+- `cloudCover` usa `cloudcover_low`, no nubosidad total, y no se normaliza a `0..1`.
+- `visibility` se pasa sin convertir desde metros.
+- `uvIndex` horario usa `direct_radiation`, que no equivale a índice UV.
+
+**Impacto:** bajo en la UI actual porque no todos esos campos se muestran, pero alto para compatibilidad interna y futuras pantallas.
+
+**Recomendación:**
+
+- Usar `cloudcover` total y normalizarlo si se quiere mantener semántica Dark Sky.
+- Convertir `visibility` según las unidades configuradas.
+- Solicitar `uv_index` horario si está disponible o dejar el campo sin inventar a partir de radiación directa.
+
+#### Traducciones meteorológicas limitadas
+
+`get_weather_translations()` incluye textos para `en` y `es`, mientras el proyecto tiene recursos de UI para más idiomas.
+
+**Impacto:** con otros idiomas de configuración, el resumen puede caer a `Desconocido`.
+
+**Recomendación:** ampliar traducciones WMO o integrarlas con el sistema `intl`.
 
 ## Mejoras de disponibilidad en Raspberry Pi
 
@@ -349,14 +490,18 @@ Campos mínimos que debería exponer:
 3. Añadir `timezone` a `config.json-sample`.
 4. Usar timeout real en `requests.get()`.
 5. Respetar `enabled` o eliminarlo hasta implementarlo correctamente.
+6. Corregir el mapeo de `currently` para usar el código WMO actual y no el código diario.
+7. Separar correctamente `precipIntensity` de `precipProbability`.
+8. Alinear las unidades solicitadas a Open-Meteo con `config["units"]`.
 
 ### Prioridad media
 
 1. Validación formal de configuración.
 2. Caché local del último forecast válido.
 3. Manejo de excepciones por página.
-4. Alinear unidades Open-Meteo con `config["units"]`.
-5. Eliminar `eval()`.
+4. Eliminar `eval()`.
+5. Mejorar `precipType`, `cloudCover`, `visibility` y `uvIndex` para conservar mejor la semántica Dark Sky.
+6. Ampliar traducciones de códigos WMO a los idiomas soportados por la UI.
 
 ### Prioridad baja / evolutiva
 
@@ -370,6 +515,7 @@ Campos mínimos que debería exponer:
 1. **Estabilización**
    - Corregir iconos.
    - Añadir fallback seguro.
+   - Corregir mapeo de estado actual, precipitación y unidades Open-Meteo.
    - Añadir timeout y reintento básico.
    - Validar configuración mínima.
 
@@ -400,6 +546,15 @@ Campos mínimos que debería exponer:
 - Test de configuración sin `timezone`.
 - Test con `daily.enabled=false` y/o `hourly.enabled=false`.
 - Test con menos de 4 horas disponibles.
+- Test de conversión Open-Meteo → Dark Sky con códigos WMO representativos:
+  - despejado/nuboso;
+  - lluvia;
+  - nieve;
+  - aguanieve/engelante;
+  - tormenta/granizo.
+- Test de que `currently.summary` e `currently.icon` usan `current_weather.weathercode`.
+- Test de que `precipIntensity` usa acumulación/intensidad de precipitación y no probabilidad.
+- Test parametrizado de unidades (`si`, `ca`, `uk2`, `us`) para comprobar que los valores solicitados coinciden con las etiquetas de la UI.
 - Test manual en Raspberry Pi:
   - arranque sin red;
   - arranque con red lenta;
